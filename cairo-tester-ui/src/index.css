@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  /* VS Code theme variables fallbacks */
+  --vscode-foreground: #cccccc;
+  --vscode-editor-background: #1e1e1e;
+  --vscode-editor-inactiveSelectionBackground: #3a3d41;
+  --vscode-panel-border: #454545;
+  --vscode-button-background: #0e639c;
+  --vscode-button-foreground: #ffffff;
+  --vscode-button-hoverBackground: #1177bb;
+  --vscode-input-background: #3c3c3c;
+  --vscode-input-foreground: #cccccc;
+  --vscode-input-border: #3c3c3c;
+  --vscode-textPreformat-foreground: #d7ba7d;
+  --vscode-textBlockQuote-background: #7f848e;
+  --vscode-textBlockQuote-border: #7f848e;
+  --vscode-terminal-background: #0c0c0c;
+  --vscode-terminal-foreground: #cccccc;
+  --vscode-terminal-border: #414141;
+  --vscode-focusBorder: #007acc;
+  --vscode-descriptionForeground: #ccccccb3;
+  --vscode-progressBar-background: #0e70c0;
+  --vscode-progressBar-foreground: #ffffff;
+  --vscode-scrollbarSlider-background: #79797966;
+  --vscode-scrollbarSlider-activeBackground: #bfbfbf66;
+  --vscode-scrollbarSlider-hoverBackground: #646464b3;
+  --vscode-charts-blue: #75beff;
+  --vscode-charts-orange: #ffcc99;
+  --vscode-errorForeground: #f85149;
+  --vscode-button-secondaryBackground: #313131;
+  --vscode-button-secondaryForeground: #cccccc;
+  --vscode-button-secondaryHoverBackground: #3c3c3c;
+  --vscode-textCodeBlock-background: #0a0a0a;
+  --vscode-font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  --vscode-editor-font-family: 'SF Mono', Monaco, 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
+}
+
+body {
+  margin: 0;
+  font-family: var(--vscode-font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-foreground);
+}
+
+* {
+  box-sizing: border-box;
+}
