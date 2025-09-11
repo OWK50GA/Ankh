@@ -1,0 +1,111 @@
+{
+  "name": "cairo-tester",
+  "displayName": "cairo-tester",
+  "description": "an extension used to test your cairo code right away",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.103.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/*/.cairo"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cairo-tester",
+          "title": "Cairo Tester",
+          "icon": "cairo_logo.svg"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "cairo-tester.helloWorld",
+        "title": "Hello World"
+      },
+      {
+        "command": "cairo-tester.refreshContracts",
+        "title": "Refresh Contracts"
+      },
+      {
+        "command": "cairo-tester.deployContract",
+        "title": "Deploy Contracts"
+      },
+      {
+        "command": "cairo-tester.interactWithContract",
+        "title": "Interact With Contracts"
+      }
+    ],
+    "views": {
+      "cairo-tester": [
+        {
+          "id": "cairo-tester",
+          "name": "Cairo Contracts Tester",
+          "when": "worskpaceContains:**/*/.cairo || true",
+          "icon": "sn_symbol.svg"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "cairo-tester.refreshContracts",
+          "when": "inTreeView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "cairo-tester.deployContract",
+          "when": "view == cairoContracts && viewItem == contract",
+          "group": "inline"
+        },
+        {
+          "command": "cairo-tester.interactWithContract",
+          "when": "view == cairoContracts && viewItem == deployedContract",
+          "group": "inline"
+        }
+      ]
+    },
+    "icons": {
+      "cairo-contract": {
+        "description": "Cairo contract icon",
+        "default": {
+          "fontPath": "./assets/icons/cairo-icons.woff",
+          "fontCharacter": "\\e001"
+        }
+      },
+      "starknet-deployed": {
+        "description": "Deployed Starknet contract",
+        "default": {
+          "fontPath": "./assets/icons/cairo-icons.woff", 
+          "fontCharacter": "\\e002"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.103.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "eslint": "^9.34.0",
+    "typescript": "^5.9.2",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}

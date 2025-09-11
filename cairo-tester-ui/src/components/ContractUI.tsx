@@ -2,11 +2,10 @@ import { useState, useEffect } from "react"
 import ContractReadMethods from "./ContractReadMethods";
 import ContractWriteMethods from "./ContractWriteMethods";
 import type { ContractData, ContractFunctionData } from "../types";
-import { Loader } from "lucide-react";
 
-export default function ContractUI ({ contractData, contractDataLoading }: {
+export default function ContractUI ({ contractData }: {
     contractData: ContractData | null,
-    contractDataLoading: boolean
+    // contractDataLoading: boolean
 }) {
     const [activeTab, setActiveTab] = useState("read");
     const [contractFunctionsData, setContractFunctionsData] = useState<ContractFunctionData | null>(null);
@@ -19,13 +18,13 @@ export default function ContractUI ({ contractData, contractDataLoading }: {
         }
     }, [contractData]);
 
-    if (contractDataLoading) {
-        return (
-            <div>
-                <Loader />
-            </div>
-        )
-    }
+    // if (contractDataLoading) {
+    //     return (
+    //         <div>
+    //             <Loader />
+    //         </div>
+    //     )
+    // }
 
     if (!contractData) {
         return <div>Error Finding Contract Data</div>;
