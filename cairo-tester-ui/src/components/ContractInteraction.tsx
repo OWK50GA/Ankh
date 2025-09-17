@@ -171,14 +171,14 @@ const ContractInterface: React.FC = () => {
                 <h2>Deploy & Declare</h2>
                 <div className="button-group">
                     <button 
-                        className={`button primary ${isLoading.declare ? 'loading' : ''}`}
+                        className={`button primary bg-gradient-to-r from-[#9433DC] to-[#D57B52] ${isLoading.declare ? 'loading' : ''}`}
                         onClick={declareContract}
                         disabled={isLoading.declare}
                     >
                         {isLoading.declare ? 'Declaring...' : 'Declare Contract'}
                     </button>
                     <button 
-                        className={`button primary ${isLoading.deploy ? 'loading' : ''}`}
+                        className={`button primary bg-gradient-to-r from-[#9433DC] to-[#D57B52] ${isLoading.deploy ? 'loading' : ''}`}
                         onClick={deployContract}
                         disabled={isLoading.deploy || !deploymentInfo.classHash}
                     >

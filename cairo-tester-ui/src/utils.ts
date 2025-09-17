@@ -1,7 +1,7 @@
 import type { Abi } from "abi-wan-kanabi";
-import type { AbiEnum, AbiFunction, AbiOutput, AbiParameter, AbiStateMutability, AbiStruct, FormErrorMessageState } from "./types";
+import type { AbiConstructor, AbiEnum, AbiFunction, AbiOutput, AbiParameter, AbiStateMutability, AbiStruct, ContractArtifact, FormErrorMessageState } from "./types";
 import type { CairoBigInt, CairoBool, CairoByteArray, CairoBytes31, CairoClassHash, CairoContractAddress, CairoEthAddress, CairoFelt, CairoFunction, CairoInt, CairoSecp256k1Point, CairoTuple, CairoU256, CairoVoid } from "abi-wan-kanabi/kanabi";
-import { cairo, CairoCustomEnum, CairoOption, CairoOptionVariant, CairoResult, CairoResultVariant, getChecksumAddress, num, type Uint256 } from "starknet";
+import { Account, cairo, CairoCustomEnum, CairoOption, CairoOptionVariant, CairoResult, CairoResultVariant, constants, Contract, extractContractHashes, getChecksumAddress, num, RpcError, RpcProvider, stark, transaction, type CairoAssembly, type Calldata, type CompiledSierra, type DeclareContractPayload, type RawArgs, type SierraEntryPointsByType, type SierraProgramDebugInfo, type Uint256, type UniversalDetails } from "starknet";
 import { formatEther, ZeroAddress } from "ethers";
 
 const convertStringInputToBool = (input: string) => {
@@ -150,12 +150,12 @@ export const getInitialTupleFormState = (abiParameter: AbiStruct | AbiEnum) => {
   return initialForm;
 };
 
-export function getFunctionInputKey(functionName: string, input: AbiParameter, index: number): string {
+export function getFunctionInputKey(functionName: string, input: AbiParameter, index?: number): string {
     const name = input.name || `input_${index}_`;
     return `${functionName}_${name}_${input.type}`;
 }
 
-export function getInitialFormState(abiFunction: AbiFunction) {
+export function getInitialFormState(abiFunction: AbiFunction | AbiConstructor) {
     const initialForm: Record<string, any> = {};
     if (!abiFunction.inputs) return initialForm;
 
@@ -166,6 +166,18 @@ export function getInitialFormState(abiFunction: AbiFunction) {
 
     return initialForm;
 }
+
+// export function getInitialConstructorFormState(abiConstructor: AbiConstructor) {
+//   const initialConstructorForm: Record<string, any> = {};
+//   if (!abiConstructor.inputs) return initialConstructorForm;
+
+//   abiConstructor.inputs.forEach((input, index) => {
+//     const key = getFunctionInputKey(abiConstructor.name, input, index);
+//     initialConstructorForm[key] = ""
+//   })
+
+//   return initialConstructorForm
+// }
 
 export const getArgsAsStringInputFromForm = (form: Record<string, any>) => {
   const _encodeValueFromKey = (key: string = "", value: any): any => {
@@ -882,3 +894,336 @@ export const decodeContractResponse = ({
   }
   return decodedResult;
 };
+
+export function getConstructorWithArgs(abi: Abi): {
+  constructor: AbiConstructor,
+  constructorArgs: readonly AbiParameter[]
+} {
+  const constructor = abi.find((part) => part.type === "constructor");
+  if (!constructor) return {} as any;
+
+  const constructorArgs = constructor.inputs;
+  return {
+    constructor, constructorArgs
+  }
+}
+
+export function getCompiledSierra (contractData: ContractArtifact): CompiledSierra {
+  return {
+    sierra_program: contractData.sierraProgram,
+    sierra_program_debug_info: contractData.sierraProgramDebugInfo as SierraProgramDebugInfo,
+    contract_class_version: contractData.contractClassVersion,
+    entry_points_by_type: contractData.entryPointsByType as SierraEntryPointsByType,
+    abi: contractData.abi
+  };
+}
+
+const declareIfNot_NotWait = async (
+  payload: DeclareContractPayload,
+  provider: RpcProvider,
+  account: Account,
+  options?: UniversalDetails,
+) => {
+  const { classHash } = extractContractHashes(payload);
+
+  try {
+    await provider.getClassByHash(classHash);
+    console.log(
+    "Skipping declare - class hash",
+      classHash,
+      "already exists on-chain."
+    );
+
+    return {
+      classHash,
+    };
+  } catch (e) {
+    if (e instanceof RpcError && e.isType("CLASS_HASH_NOT_FOUND")) {
+      console.log(
+        "Class hash",
+        classHash,
+        "not found, proceeding with declaration..."
+      );
+    } else {
+      console.error("Error while checking classHash", classHash);
+      throw e;
+    }
+  }
+
+  try {
+    await account.declare(payload, {
+      ...options,
+      version: constants.TRANSACTION_VERSION.V3,
+    });
+
+    // if (networkName === "sepolia" || networkName === "mainnet") {
+    //   console.log(
+    //     yellow("Waiting for declaration transaction to be accepted...")
+    //   );
+    //   const receipt = await provider.waitForTransaction(transaction_hash);
+    //   console.log(
+    //     yellow("Declaration transaction receipt:"),
+    //     JSON.stringify(
+    //       receipt,
+    //       (_, v) => (typeof v === "bigint" ? v.toString() : v),
+    //       2
+    //     )
+    //   );
+
+    //   const receiptAny = receipt as any;
+    //   if (receiptAny.execution_status !== "SUCCEEDED") {
+    //     const revertReason = receiptAny.revert_reason || "Unknown reason";
+    //     throw new Error(
+    //       red(`Declaration failed or reverted. Reason: ${revertReason}`)
+    //     );
+    //   }
+    //   console.log(green("Declaration successful"));
+    // }
+
+    return {
+      classHash: classHash,
+    };
+  } catch (e) {
+    if (
+      e instanceof RpcError &&
+      e.isType("VALIDATION_FAILURE") &&
+      e.baseError.data.includes("exceed balance")
+    ) {
+      console.error(
+        "Class declaration failed: deployer",
+        account.address,
+        "has insufficient balance."
+      );
+      throw "Class declaration failed: insufficient balance";
+    }
+
+    console.error("Class declaration failed: error details below");
+    console.error(e);
+    throw "Class declaration failed";
+  }
+};
+
+const deployContract_NotWait = async (payload: {
+  salt: string;
+  classHash: string;
+  constructorCalldata: RawArgs;
+}, account: Account) => {
+  try {
+    const { addresses } = transaction.buildUDCCall(
+      payload,
+      account.address
+    );
+    // deployCalls.push(...calls);
+    return {
+      contractAddress: addresses[0],
+    };
+  } catch (error) {
+    console.error("Error building UDC call:", error);
+    throw error;
+  }
+};
+
+type DeployContractParams = {
+    contract: string;
+    contractName?: string;
+    constructorArgs?: RawArgs;
+    options?: UniversalDetails;
+}
+
+export const scaffoldDeployContract = async (
+  params: DeployContractParams, 
+  compiledContractCasm: CairoAssembly, 
+  // compiledContractSierra: CompiledSierra,
+  contractData: ContractArtifact,
+  providerUrl: string,
+  accountAddress: string,
+  privateKey: string,
+  constructorCalldata: Calldata
+): Promise<{
+  classHash: string;
+  address: string;
+  contract: Contract;
+}> => {
+  const { contract, constructorArgs, contractName, options } = params;
+
+  const compiledContractSierra = getCompiledSierra(contractData);
+
+  const provider = new RpcProvider({ nodeUrl: providerUrl });
+  if (!provider) {
+    throw new Error('Invalid RPC Provider')
+  }
+
+  const account = new Account(provider, accountAddress, privateKey, "1", constants.TRANSACTION_VERSION.V3);
+
+  const abi = compiledContractSierra.abi;
+  const constructorAbi = abi.find((item: any) => item.type === "constructor");
+  if (constructorAbi) {
+    const requiredArgs = constructorAbi.inputs || [];
+    if (!constructorArgs) {
+      throw new Error(
+          `Missing constructor arguments: expected ${
+            requiredArgs.length
+          } (${requiredArgs
+            .map((a: any) => `${a.name}: ${a.type}`)
+            .join(", ")}), but got none.`
+        );
+    }
+
+    for (const arg of requiredArgs) {
+      if (
+        !(arg.name in constructorArgs) ||
+        // @ts-expect-error
+        constructorArgs[arg.name] === undefined ||
+        // @ts-expect-error
+        constructorArgs[arg.name] === null ||
+        // @ts-expect-error
+        constructorArgs[arg.name] === ""
+      ) {
+        throw new Error(
+            `Missing value for constructor argument '${arg.name}' of type '${arg.type}'.`
+        );
+      }
+    }
+
+    // const validationResult = validateConstructorArgsWithStarknetJS(
+    //   abi,
+    //   constructorArgs
+    // );
+    // if (!validationResult.isValid) {
+    //   throw new Error(
+    //     red(`Constructor validation failed: ${validationResult.error}`)
+    //   );
+    // }
+  }
+
+  // const contractCalldata = new CallData(compiledContractSierra.abi);
+  // const constructorCalldata = constructorArgs
+  //   ? contractCalldata.compile("constructor", constructorArgs)
+  //   : [];
+
+  console.log("Deploying Contract ", contractName || contract);
+
+  let { classHash } = await declareIfNot_NotWait(
+    {
+      contract: compiledContractSierra,
+      casm: compiledContractCasm,
+    },
+    provider,
+    account,
+    options
+  );
+
+  let randomSalt = stark.randomAddress();
+
+  let { contractAddress } = await deployContract_NotWait({
+    salt: randomSalt,
+    classHash,
+    constructorCalldata,
+  }, account);
+
+  console.log("Contract Deployed at ", contractAddress);
+
+  // let finalContractName = contractName || contract;
+
+  // deployments[finalContractName] = {
+  //   classHash: classHash,
+  //   address: contractAddress,
+  //   contract: contract,
+  // };
+
+  const deployedContract = new Contract(
+    compiledContractSierra.abi, contractAddress, provider
+  )
+
+  return {
+    classHash: classHash,
+    address: contractAddress,
+    contract: deployedContract
+  };
+};
+
+export async function deployContract(
+  contractData: ContractArtifact,
+  providerUrl: string,
+  accountAddress: string,
+  privateKey: string,
+  constructorCalldata: Calldata
+): Promise<Contract> {
+
+  try {
+    const compiledSierra = getCompiledSierra(contractData)
+    console.log("Compiled sierra available");
+    const provider = new RpcProvider({ nodeUrl: providerUrl });
+    console.log("rpc url available");
+    const account = new Account(
+      provider, 
+      accountAddress, 
+      privateKey,
+      "1",
+      constants.TRANSACTION_VERSION.V3
+    );
+    console.log("account available");
+
+    // const { class_hash, transaction_hash: declareTxHash } = await account.declare(
+    //   {
+    //     contract: compiledSierra
+    //   }
+    // );
+
+    // console.log(declareTxHash);
+
+    const salt = Math.floor(Math.random() * 1000000).toString();
+
+    // const { contract_address, transaction_hash: deployTxHash } = await account.deploy({
+    //   classHash: class_hash,
+    //   constructorCalldata: constructorCalldata ? constructorCalldata : undefined,
+    //   salt,
+    // })
+
+    const { contract: _extractedContract, classHash, compiledClassHash, casm } = extractContractHashes({
+      contract: compiledSierra,
+      casm: contractData.compiledCasm
+    });
+
+    if (!classHash || !classHash || !compiledClassHash || !casm) {
+      throw new Error("Failed to extract contract Hashes");
+    }
+
+    console.log("Successfully computed contract hashes")
+
+    const { declare, deploy } = await account.declareAndDeploy(
+      {
+        classHash,
+        constructorCalldata: constructorCalldata ? constructorCalldata : undefined,
+        salt,
+        contract: compiledSierra,
+        compiledClassHash,
+        casm: contractData.compiledCasm
+      }
+    );
+
+    const contract = new Contract(
+      compiledSierra.abi, deploy.address, provider
+    )
+
+    console.log(declare.transaction_hash);
+    console.log(deploy.transaction_hash);
+
+    // const factory = new ContractFactory({
+    //   compiledContract: compiledSierra,
+    //   account,
+    //   abi: contractData.abi,
+    // });
+
+    // console.log("factory started");
+
+    // const contract = await factory.deploy(...constructorCalldata)
+    // console.log("contract deployed");
+
+    return contract;
+  } catch (err) {
+    console.error("Error deploying contract: ", (err as Error).message);
+    throw err;
+  }
+}
+

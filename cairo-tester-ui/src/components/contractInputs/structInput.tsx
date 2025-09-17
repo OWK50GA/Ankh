@@ -114,7 +114,7 @@ export const Struct = ({
                     <input
                       type="checkbox"
                       name={`radio-${index}`}
-                      className="radio radio-xs radio-secondary"
+                      className="radio radio-xs radio-secondary focus-within:outline-1 outline-[#D57B52]"
                       checked={index === activeVariantIndex}
                       onChange={() => {}}
                       onClick={() => {

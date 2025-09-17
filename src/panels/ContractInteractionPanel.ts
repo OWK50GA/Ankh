@@ -1,5 +1,7 @@
 import * as vscode from 'vscode'
 import { ContractArtifact, ContractItem } from '../providers/CairoContractsProvider';
+import * as path from 'path';
+import * as fs from 'fs';
 
 export class ContractInteractionPanel {
     public static currentPanel: ContractInteractionPanel | undefined;
@@ -8,6 +10,11 @@ export class ContractInteractionPanel {
     public readonly _extensionUri: vscode.Uri;
     private _disposables: vscode.Disposable[] = [];
     private _contract: ContractArtifact;
+    private _accountInfo: {
+        privateKey?: string;
+        walletAddress?: string;
+        rpcUrl?: string;
+    } = {};
 
     public static createOrShow(extensionUri: vscode.Uri, contractItem: ContractItem) {
         const column = vscode.window.activeTextEditor
@@ -45,9 +52,15 @@ export class ContractInteractionPanel {
         this._extensionUri = extensionUri;
         this._contract = contract;
 
+        this._loadEnvironmentVariables();
+
         this._update();
 
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+
+        // const accountInfo = {
+        //     address: 
+        // }
 
         this._panel.webview.onDidReceiveMessage(
             async (message) => {
@@ -67,11 +80,53 @@ export class ContractInteractionPanel {
                             data: this._contract
                         });
                         break;
+                    case 'getAccountInfo':
+                        this._panel.webview.postMessage({
+                            type: 'accountInfo',
+                            data: this._accountInfo
+                        });
+                        break;
                 }
             },
             null,
             this._disposables
         );
+    }
+
+    private _loadEnvironmentVariables() {
+        try {
+            if (!this._accountInfo.privateKey || !this._accountInfo.walletAddress) {
+                const workspaceFolders = vscode.workspace.workspaceFolders;
+                if (workspaceFolders && workspaceFolders.length > 0) {
+                    const envPath = path.join(workspaceFolders[0].uri.fsPath, '.env');
+
+                    if (fs.existsSync(envPath)) {
+                        const envContent = fs.readFileSync(envPath, 'utf8');
+                        const envLines = envContent.split('\n');
+
+                        envLines.forEach(line => {
+                            const [key, value] = line.split('=');
+                            if (key && value) {
+                                const trimmedKey = key.trim();
+                                const trimmedValue = value.trim();
+
+                                if (trimmedKey === 'PRIVATE_KEY_SEPOLIA') {
+                                    this._accountInfo.privateKey = trimmedValue;
+                                } else if (trimmedKey === 'RPC_URL_SEPOLIA') {
+                                    this._accountInfo.rpcUrl = trimmedValue;
+                                } else if (trimmedKey === 'ACCOUNT_ADDRESS_SEPOLIA') {
+                                    this._accountInfo.walletAddress = trimmedValue;
+                                }
+                            }
+                        });
+
+                        // console.log("Loaded account info: ", this._accountInfo);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Failed to load environment variables: ", err);
+        }
     }
 
     private updateContract(contract: ContractArtifact) {
@@ -184,7 +239,7 @@ export class ContractInteractionPanel {
             <head>
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width,initial-scale=1" />
-                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src https: wss:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
                 <title>Contract Interaction</title>
                 <link href="${cssUri}" rel="stylesheet">
             </head>
@@ -197,6 +252,23 @@ export class ContractInteractionPanel {
                     
                     // Request initial contract data
                     window.vscode.postMessage({ type: 'getContractData' });
+                    window.vscode.postMessage({ type: 'getAccountInfo' });
+                    
+                    // window.addEventListener('message', event => {
+                    //     const message = event.data;
+                    //     if (message.type === 'accountInfo') {
+                    //         window.accountInfo = message.data;
+                    //         console.log('Account info received:', {
+                    //             ...message.data,
+                    //             privateKey: message.data.privateKey ? '***' + message.data.privateKey.slice(-4) : 'Not set'
+                    //         });
+                            
+                    //         // Dispatch a custom event for React components to listen to
+                    //         window.dispatchEvent(new CustomEvent('accountInfoUpdated', {
+                    //             detail: message.data
+                    //         }));
+                    //     }
+                    // });
                 </script>
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>

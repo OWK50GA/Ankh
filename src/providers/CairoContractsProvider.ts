@@ -2,12 +2,25 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 
+// export interface ContractArtifact {
+//     abi: any[];
+//     classHash?: string;
+//     contractAddress?: string;
+//     sierraProgram?: string[];
+//     name: string;
+//     artifact: any;
+// }
+
 export interface ContractArtifact {
     abi: any[];
     classHash?: string;
     contractAddress?: string;
-    compiedSierra?: string[];
+    sierraProgram: string[];
+    sierraProgramDebugInfo: Record<string, any>;
+    contractClassVersion: string;
+    entryPointsByType: Record<string, any>;
     name: string;
+    compiledCasm: Record<string, any>;
 }
 
 export class ContractItem extends vscode.TreeItem {
@@ -155,13 +168,25 @@ export class CairoContractProvider implements vscode.TreeDataProvider<ContractIt
         try {
             const content = fs.readFileSync(filePath, 'utf8');
             const artifact = JSON.parse(content);
+
             
             const name = path.basename(filePath, '.contract_class.json');
+            const casmPathParts = filePath.split('.').slice(0, -2);
+            const casmBaseName = casmPathParts.join('.');
+
+            const casmPath = `${casmBaseName}.compiled_contract_class.json`;
+
+            const casmContent = fs.readFileSync(casmPath, 'utf8');
+            const casmArtifact = JSON.parse(casmContent);
             
             return {
                 name,
-                abi: artifact.abi || [],
-                compiedSierra: artifact.sierra_program
+                abi: artifact?.abi || [],
+                sierraProgram: artifact?.sierra_program || [],
+                sierraProgramDebugInfo: artifact?.sierra_program_debug_info,
+                contractClassVersion: artifact?.contract_class_version,
+                entryPointsByType: artifact?.entry_points_by_type,
+                compiledCasm: casmArtifact
             };
         } catch (error) {
             console.error(`Error parsing contract artifact ${filePath}:`, error);

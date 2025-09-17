@@ -12,6 +12,7 @@ import {
     useInjectedConnectors,
     jsonRpcProvider,
 } from '@starknet-react/core';
+import { CairoTesterProvider } from './cairoTesterContext';
 
 interface StarknetProviderProps {
     children: React.ReactNode;
@@ -33,13 +34,15 @@ export function StarknetProvider({ children }: StarknetProviderProps) {
             chains={[mainnet, sepolia]}
             provider={jsonRpcProvider({
                 rpc: () => ({
-                    nodeUrl: process.env.NEXT_PUBLIC_RPC_URL,
+                    nodeUrl: "https://starknet-sepolia.public.blastapi.io/rpc/v0_8",
                 }),
             })}
             explorer={starkscan}
             autoConnect
         >
-            {children}
+            <CairoTesterProvider>
+                {children}
+            </CairoTesterProvider>
         </StarknetConfig>
     );
 }

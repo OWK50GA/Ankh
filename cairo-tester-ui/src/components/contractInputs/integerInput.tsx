@@ -1,5 +1,5 @@
-import { parseEther } from "ethers";
-import { useCallback, useEffect, useState } from "react";
+// import { parseEther } from "ethers";
+import { useEffect, useState } from "react";
 import type { CommonInputProps } from "../../types";
 import { isValidInteger } from "../../utils";
 import { InputBase } from "./inputBase";
@@ -23,19 +23,19 @@ export const IntegerInput = ({
   placeholder,
   disabled,
   variant = "core::integer::u256",
-  disableMultiplyBy1e18 = false,
+  // disableMultiplyBy1e18 = false,
   onError,
 }: IntegerInputProps) => {
   const [inputError, setInputError] = useState(false);
-  const multiplyBy1e18 = useCallback(() => {
-    if (!value) {
-      return;
-    }
+  // const multiplyBy1e18 = useCallback(() => {
+  //   if (!value) {
+  //     return;
+  //   }
 
-    return inputError
-      ? onChange(value)
-      : onChange(parseEther(value.toString()).toString());
-  }, [onChange, value, inputError]);
+  //   return inputError
+  //     ? onChange(value)
+  //     : onChange(parseEther(value.toString()).toString());
+  // }, [onChange, value, inputError]);
 
   useEffect(() => {
     const isIntValid = isValidInteger(variant, value);
@@ -54,26 +54,26 @@ export const IntegerInput = ({
       error={inputError}
       onChange={onChange}
       disabled={disabled}
-      suffix={
-        !inputError &&
-        !disabled &&
-        !disableMultiplyBy1e18 && (
-          <div
-            className="space-x-4 flex tooltip tooltip-top tooltip-primary before:content-[attr(data-tip)] before:right-[-10px] before:left-auto before:transform-none text-white"
-            data-tip="Multiply by 10^18"
-          >
-            <button
-              className={`${
-                disabled ? "cursor-not-allowed" : "cursor-pointer"
-              } font-semibold px-4 text-accent`}
-              onClick={multiplyBy1e18}
-              disabled={disabled}
-            >
-              ∗
-            </button>
-          </div>
-        )
-      }
+      // suffix={
+      //   !inputError &&
+      //   !disabled &&
+      //   !disableMultiplyBy1e18 && (
+      //     <div
+      //       className="space-x-4 flex tooltip tooltip-top tooltip-primary before:content-[attr(data-tip)] before:right-[-10px] before:left-auto before:transform-none text-white"
+      //       data-tip="Multiply by 10^18"
+      //     >
+      //       <button
+      //         className={`${
+      //           disabled ? "cursor-not-allowed" : "cursor-pointer"
+      //         } font-semibold px-4 text-accent bg-gradient-to-r from-[#9433DC] to-[#D57B52] rounded-md`}
+      //         onClick={multiplyBy1e18}
+      //         disabled={disabled}
+      //       >
+      //         ∗
+      //       </button>
+      //     </div>
+      //   )
+      // }
     />
   );
 };

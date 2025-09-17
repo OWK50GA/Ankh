@@ -115,12 +115,12 @@ export const ArrayInput = ({
                 }));
                 setArrLength(nextLength);
               }}
-              className="btn  btn-sm shadow-none border border-success text-white"
+              className="bg-gradient-to-r from-[#9433DC] to-[#D57B52] shadow-none border border-success text-white rounded-md"
             >
               + Add (push)
             </button>
             <button
-              className="btn  btn-sm shadow-none border border-error text-white"
+              className="bg-gradient-to-r from-[#9433DC] to-[#D57B52] shadow-none border border-error text-white rounded-md"
               onClick={() => {
                 if (arrLength > -1) {
                   const nextInputArr = { ...inputArr };

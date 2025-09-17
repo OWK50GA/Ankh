@@ -1,7 +1,10 @@
 // export type AbiStateMutability = "view" | "external"
 
+import type { Abi } from "abi-wan-kanabi";
+import type { CairoAssembly } from "starknet";
+
 export type ContractFunctionData = {
-    abi: any[];
+    abi: Abi;
     classHash?: string;
     contractAddress?: `0x${string}`;
 }
@@ -18,10 +21,22 @@ declare global {
     }
 }
 
-export type ContractData = {
+export type ContractArtifact = {
+    abi: Abi;
+    classHash?: string;
+    contractAddress?: string;
+    sierraProgram: string[];
+    sierraProgramDebugInfo: Record<string, any>;
+    contractClassVersion: string;
+    entryPointsByType: Record<string, any>;
     name: string;
-    abi: any[];
-    compiledSierra: any[];
+    compiledCasm: CairoAssembly
+}
+
+export type AccountInfo = {
+    privateKey: string;
+    walletAddress: string;
+    rpcUrl: string;
 }
 
 /* Abi-related issh from abi-wan-kanabi */

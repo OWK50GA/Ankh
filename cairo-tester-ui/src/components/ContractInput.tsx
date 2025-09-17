@@ -113,7 +113,7 @@ export default function ContractInput({
                 </span>
                 )}
                 <span className="block text-xs font-extralight leading-none">
-                {displayType(paramType.type)}
+                    {displayType(paramType.type)}
                 </span>
             </div>
             {renderInput()}
