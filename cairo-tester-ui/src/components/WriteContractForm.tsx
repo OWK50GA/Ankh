@@ -2,13 +2,12 @@ import type { Abi } from "abi-wan-kanabi"
 import type { AbiFunction, FormErrorMessageState } from "../types";
 import type { Address } from "@starknet-react/chains";
 import { useRef, useState } from "react";
-import { addError, getArgsAsStringInputFromForm, getFunctionInputKey, getInitialFormState, getTopErrorMessage, isError } from "../utils";
-// import { useAccount } from "@starknet-react/core";
+import { addError, getArgsAsStringInputFromForm, getFunctionInputKey, getInitialFormState, getTopErrorMessage, isError, shortenAddress } from "../utils";
 import { Account, CallData, constants, RpcProvider } from "starknet";
 import { useConfig } from "../contexts/cairoTesterContext";
 import ContractInput from "./ContractInput";
-// import { TxReceipt } from "./TxReceipt";
-import { Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
+import CopyButton from "./CopyButton";
 
 export default function WriteContractForm ({
     abi, abiFunction, contractAddress
@@ -28,6 +27,10 @@ export default function WriteContractForm ({
     const lastForm = useRef(form);
     const [isLoading, setIsLoading] = useState(false);
     const [_txHash, setTxHash] = useState<string>();
+
+    const notifyFailed = (message: string) => {
+        return toast.error(message)
+    }
     
     const { accountInfo } = useConfig();
     const provider = new RpcProvider({ nodeUrl: accountInfo.rpcUrl });
@@ -110,21 +113,9 @@ export default function WriteContractForm ({
         const isValid = formIsValid(values);
 
         if (!isValid) {
+            notifyFailed("Values not filled completely");
             throw new Error("Values not filled completely");
         }
-
-        // const newInputValue = getArgsAsStringInputFromForm(form);
-        // console.log(newInputValue);
-        // const expectedArgCount = abiFunction.inputs.length;
-
-        // const isValid = 
-        //     Array.isArray(newInputValue) &&
-        //     expectedArgCount === newInputValue.length && 
-        //     newInputValue.every((arg) => arg !== undefined && arg !== null && arg !== "");
-        
-        // if (!isValid) {
-        //     return;
-        // }
 
         if (JSON.stringify(form) !== JSON.stringify(lastForm.current)) {
             setInputValue(values);
@@ -148,6 +139,7 @@ export default function WriteContractForm ({
             console.log(transaction_hash);
             setTxHash(transaction_hash);
         } catch (err) {
+            notifyFailed(`Error invoking contract: ${(err as Error).message}`);
             console.error("Error invoking contract: ", err);
         } finally {
             setIsLoading(false);
@@ -172,30 +164,31 @@ export default function WriteContractForm ({
                     <div>No arguments required</div>
                 )}
                 <div className="flex justify-between gap-2">
-                {/* {showTxReceiptInLine && (
-                    <div className="grow basis-0">
-                        <TxReceipt txResult={txHash} />
-                    </div>
-                )} */}
-                <div
-                    className={`flex ${
-                        isError(formErrorMessage) &&
-                        "tooltip before:content-[attr(data-tip)] before:right-[-10px] before:left-auto before:transform-none"
-                    }`}
-                    data-tip={`${getTopErrorMessage(formErrorMessage)}`}
-                >
-                    <button
-                        className="btn bg-gradient-to-r from-[#9433DC] to-[#D57B52] shadow-none border-none text-white disabled:cursor-not-allowed px-2 py-2 rounded-md"
-                        // disabled={writeDisabled || isError(formErrorMessage) || isLoading}
-                        disabled={isLoading || !readyForInteraction}
-                        onClick={handleWrite}
+                    <div
+                        className={`flex ${
+                            isError(formErrorMessage) &&
+                            "tooltip before:content-[attr(data-tip)] before:right-[-10px] before:left-auto before:transform-none"
+                        }`}
+                        data-tip={`${getTopErrorMessage(formErrorMessage)}`}
                     >
-                        {isLoading && (
-                            <Loader2 />
-                        )}
-                        Send Tx
-                    </button>
-                </div>
+                        <button
+                            className="btn bg-gradient-to-r from-[#9433DC] to-[#D57B52] shadow-none border-none text-white disabled:cursor-not-allowed px-2 py-2 rounded-md"
+                            // disabled={writeDisabled || isError(formErrorMessage) || isLoading}
+                            disabled={isLoading || !readyForInteraction}
+                            onClick={handleWrite}
+                        >
+                            {/* {isLoading && (
+                                <Loader2 />
+                            )} */}
+                            {isLoading ? 'Sending Tx...' : 'Send Tx'}
+                        </button>
+                    </div>
+                    {_txHash && (
+                        <div className="flex gap-2 items-center grow basis-0">
+                            <p className="text-md">txHash: {shortenAddress(_txHash as `0x${string}`)}</p>
+                            <CopyButton copyText={_txHash} className=""/>
+                        </div>
+                    )}
                 </div>
             </div>
             {/* {showTxReceiptBelow && (

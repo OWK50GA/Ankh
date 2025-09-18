@@ -6,6 +6,8 @@ import { addError, deployContract, getConstructorWithArgs, getFunctionInputKey, 
 import ContractInput from "./ContractInput";
 import { useConfig } from "../contexts/cairoTesterContext";
 import { CallData } from "starknet";
+import toast from "react-hot-toast";
+import CopyButton from "./CopyButton";
 
 type NetworkType = "devnet" | "sepolia" | "mainnnet";
 
@@ -23,6 +25,14 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
 }) {
     
     const { setContractData, setAccountInfo, setContractFunctionsData } = useConfig();
+
+    const notifySuccessful = (message: string) => {
+        return toast.success(message)
+    }
+
+    const notifyFailed = (message: string) => {
+        return toast.error(message)
+    }
 
     useEffect(() => {
         if (accountInfo.privateKey !== "") {
@@ -120,6 +130,7 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
         const values = Object.values(form);
         const isValid = formIsValid(values);
         if (!isValid) {
+            notifyFailed("Fill form completely/correctly")
             throw new Error("Form not valid, recheck");
         };
         setDeploying(true);
@@ -149,8 +160,10 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
             setContractFunctionsData(prev => ({...prev as any, contractAddress: contract.address as `0x${string}`}));
             setContractData(prev => ({...prev as any, contractAddress: (contract.address as `0x${string}`)}));
 
+            notifySuccessful("Deployment successful");
         } catch (err) {
             console.error("Error compiling form", err);
+            notifyFailed(`Deployment failed, ${(err as Error).message}`);
         } finally {
             setDeploying(false);
         }
@@ -164,6 +177,7 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
             const { contractAddress, classHash } = formInputValues;
 
             if (!contractAddress) {
+                notifyFailed("Add contractAddress to load an already-deployed version")
                 throw new Error("Add contractAddress to load contract")
             }
 
@@ -178,13 +192,25 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
                 contractAddress,
                 ...(classHash && { classHash })
             }));
+            notifySuccessful("Contract Loaded Successfully");
         } catch(err) {
-            console.error("Error loading contract", err)
+            console.error("Error loading contract", err);
+            notifyFailed(`Error loading contract: ${(err as Error).message}`);
         }
     }
 
+    const jsonAbi = JSON.stringify(contractData.abi);
+
     return (
         <div className="bg-[#161616] rounded-2xl px-4 py-4 flex flex-col gap-10 w-fit h-fit">
+
+            <div className="flex items-center">
+                <button className="bg-transparent px-2 py-1 text-bold">
+                    Copy Abi
+                </button>
+                <CopyButton copyText={jsonAbi} className=""/>
+            </div>
+
             <form className="flex flex-col gap-2">
                 <div className="flex flex-col md:flex-row flex-wrap gap-8 text-md">
                     <div className="flex-col flex gap-1.5">
@@ -203,19 +229,6 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
                                 className="outline-none w-[300px] focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
                             />
                         </div>
-
-                        {/* <span className=>
-                            <PiEnvelopeSimpleFill className='text-gray-600'/>
-                            <input 
-                                type="text" 
-                                className='outline-none' 
-                                placeholder='e.g. alex@email.com'
-                                {...register('email')}
-                            />
-                            <div className='hidden md:flex text-sm text-[#FF3939] font-light'>
-                                {errors.email ? errors.email.message : ''}
-                            </div>
-                        </span> */}
                     </div>
 
                     <div className="flex-col flex gap-1.5">
@@ -252,31 +265,45 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
 
                     <div className="flex-col flex gap-1.5">
                         <label htmlFor="">ClassHash</label>
-                        <div className="flex flex-col justify-center rounded-md relative p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
-                            <input 
-                                type="text"
-                                // Should be readOnly because I do not want it editable now
-                                readOnly
-                                value={formInputValues.classHash}
-                                onChange={(e) => {
-                                    setFormInputValues(prev => ({...prev, classHash: e.target.value}))
-                                }}
-                                className="outline-none w-[300px] focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
-                            />
+                        <div className="flex items-center">
+                            <div className="flex items-center justify-center rounded-md relative p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
+                                <input 
+                                    type="text"
+                                    // Should be readOnly because I do not want it editable now
+                                    readOnly
+                                    value={formInputValues.classHash}
+                                    onChange={(e) => {
+                                        setFormInputValues(prev => ({...prev, classHash: e.target.value}))
+                                    }}
+                                    className="outline-none w-[300px] focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
+                                />
+                            </div>
+                            {
+                                (contractData.classHash || formInputValues.classHash) && (
+                                    <CopyButton copyText={contractData.classHash || formInputValues.classHash || ""} className="text-xs"/>
+                                )
+                            }
                         </div>
                     </div>
 
                     <div className="flex-col flex gap-1.5">
                         <label htmlFor="">ContractAddress</label>
-                        <div className="flex flex-col justify-center rounded-md relative p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
-                            <input 
-                                type="text"
-                                value={formInputValues.contractAddress}
-                                onChange={(e) => {
-                                    setFormInputValues(prev => ({...prev, contractAddress: (e.target.value as `0x${string}`)}))
-                                }}
-                                className="outline-none w-[300px] focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
-                            />
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center rounded-md relative p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
+                                <input 
+                                    type="text"
+                                    value={formInputValues.contractAddress}
+                                    onChange={(e) => {
+                                        setFormInputValues(prev => ({...prev, contractAddress: (e.target.value as `0x${string}`)}))
+                                    }}
+                                    className="outline-none w-[300px] focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
+                                />
+                            </div>
+                            {
+                                (contractData.contractAddress || formInputValues.contractAddress) && (
+                                    <CopyButton copyText={contractData.contractAddress || formInputValues.contractAddress || ""} className="text-xs"/>
+                                )
+                            }
                         </div>
                     </div>
                 </div>
@@ -319,7 +346,7 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
                         {/* {inputValue && isFetching && (
                         <span className="loading loading-spinner loading-xs"></span>
                         )} */}
-                        Deploy
+                        {deploying ? 'Deploying...' : 'Deploy'}
                     </button>
                 </div>
             </div>

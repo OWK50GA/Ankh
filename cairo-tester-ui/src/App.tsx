@@ -3,6 +3,7 @@ import ContractUI from './components/ContractUI';
 import type { AccountInfo, ContractArtifact } from "./types";
 import { StarknetProvider } from './contexts/StarknetProvider';
 import ConfigurationForm from './components/ConfigurationForm';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   const [contractData, setContractData] = useState<ContractArtifact | null>(null);
@@ -57,6 +58,7 @@ function App() {
 
   return (
     <StarknetProvider>
+      <Toaster />
       {/* <CairoTesterProvider> */}
 
         <div className='w-full p-4 bg-[#161616] text-[#9BDBFF] min-h-screen'>

@@ -2,10 +2,10 @@ import type { Abi } from "abi-wan-kanabi"
 import type { AbiFunction, FormErrorMessageState } from "../types"
 import { useRef, useState } from "react"
 import { decodeContractResponse, getArgsAsStringInputFromForm, getFunctionInputKey, getInitialFormState, getTopErrorMessage, isError } from "../utils"
-// import { useContract } from "@starknet-react/core"
 import ContractInput from "./ContractInput"
 import { Contract, RpcProvider } from "starknet"
 import { useConfig } from "../contexts/cairoTesterContext"
+import toast from "react-hot-toast"
 
 export default function ReadContractForm({ contractAddress, abiFunction, abi }: {
     contractAddress?: `0x${string}`,
@@ -17,7 +17,13 @@ export default function ReadContractForm({ contractAddress, abiFunction, abi }: 
     const [inputValue, setInputValue] = useState<any | undefined>(undefined);
     const [formErrorMessage, setFormErrorMessage] = useState<FormErrorMessageState>({});
     const lastForm = useRef(form);
+
+    const [isReading, setIsReading] = useState(false);
     // const [error, setError] = useState<any>();
+
+    const notifyFailed = (message: string) => {
+        return toast.error(message)
+    }
 
     const [data, setData] = useState<any>(null)
 
@@ -27,28 +33,9 @@ export default function ReadContractForm({ contractAddress, abiFunction, abi }: 
 
     const readyForInteraction = !!contractAddress && contractAddress !== ("" as `0x${string}`) && contractAddress satisfies `0x${string}`
 
-    // const { contract: contractInstance } = useContract({
-    //     abi,
-    //     address: contractAddress,
-    // });
     const provider = new RpcProvider({ nodeUrl: accountInfo.rpcUrl });
 
     const contract = new Contract(abi, contractAddress!, provider);
-
-    // const { isFetching, data, refetch, error } = useReadContract({
-    //     abi,
-    //     functionName: abiFunction.name,
-    //     address: contractAddress,
-    //     args: inputValue,
-    //     enabled: !!inputValue && !!contractInstance,
-    // });
-
-    // useEffect(() => {
-    //     if (error) {
-    //     console.error(error?.message);
-    //     console.error(error.stack);
-    //     }
-    // }, [error]);
 
     const zeroInputs = abiFunction.inputs.length === 0;
 
@@ -78,6 +65,7 @@ export default function ReadContractForm({ contractAddress, abiFunction, abi }: 
             newInputValue.every((arg) => arg !== undefined && arg !== null && arg !== "");
         
         if (!isValid) {
+            notifyFailed("Complete the Form Values");
             return;
         }
 
@@ -86,16 +74,17 @@ export default function ReadContractForm({ contractAddress, abiFunction, abi }: 
             lastForm.current = form;
         }
 
+        setIsReading(true);
         try {
             const data = await contract.call(`${abiFunction.name}`, inputValue);
             console.log(data);
             setData(() => data);
         } catch (err) {
-            // setError(err as Error);
+            notifyFailed(`Error reading contract: ${(err as Error).message}`);
             console.error((err as Error).message);
+        } finally {
+            setIsReading(false);
         }
-
-        // refetch();
     }
 
     return (
@@ -130,21 +119,21 @@ export default function ReadContractForm({ contractAddress, abiFunction, abi }: 
                 </div>
 
                 <div
-                    className={`flex ${
+                    className={`${
                         isError(formErrorMessage) &&
                         "tooltip before:content-[attr(data-tip)] before:right-[-10px] before:left-auto before:transform-none"
                     }`}
                     data-tip={`${getTopErrorMessage(formErrorMessage)}`}
                 >
                     <button
-                        className="btn bg-gradient-to-r from-[#9433DC] to-[#D57B52] btn-sm shadow-none border-none text-white px-2 py-2 rounded-md disabled:cursor-not-allowed"
+                        className="btn bg-gradient-to-r from-[#9433DC] to-[#D57B52] shadow-none border-none text-white px-2 py-2 rounded-md disabled:cursor-not-allowed"
                         onClick={handleRead}
-                        disabled={(inputValue) || isError(formErrorMessage) || !readyForInteraction}
+                        disabled={(inputValue) || isError(formErrorMessage) || !readyForInteraction || isReading}
                     >
-                        {inputValue && (
-                        <span className="loading loading-spinner loading-xs"></span>
-                        )}
-                        Read 📡
+                        {/* {inputValue && (
+                        // <span className="loading loading-spinner loading-xs"></span>
+                        )} */}
+                        {!isReading ? 'Read 📡': 'Reading... 📡'}
                     </button>
                 </div>
             </div>

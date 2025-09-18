@@ -6,17 +6,10 @@ import { useConfig } from "../contexts/cairoTesterContext";
 
 export default function ContractUI ({ contractData }: {
     contractData: ContractArtifact | null,
-    // contractDataLoading: boolean
 }) {
     const [activeTab, setActiveTab] = useState("read");
-    // const [contractFunctionsData, setContractFunctionsData] = useState<ContractFunctionData | null>(null);
 
     const { contractFunctionsData, setContractFunctionsData, setContractData } = useConfig();
-
-    // const [refreshDisplayVariables, triggerRefreshDisplayVariables] = useReducer(
-    //     (value) => !value,
-    //     false,
-    // );
 
     useEffect(() => {
         if (contractData) {

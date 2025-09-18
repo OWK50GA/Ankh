@@ -37,16 +37,10 @@ export class ContractInteractionPanel {
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
             : undefined
-        
-        // if (ContractInteractionPanel.currentPanel) {
-        //     ContractInteractionPanel.currentPanel._panel.reveal(column);
-        //     ContractInteractionPanel.currentPanel.updateContract(contractItem.artifact!)
-        //     return;
-        // }
 
         const existingPanel = ContractInteractionPanel.activePanels.get(contractName!);
         if (existingPanel) {
-            // Reveal existing panel and update contract data
+            // If a panel already exists, just switch to the panel
             existingPanel._panel.reveal(column);
             existingPanel.updateContract(contractItem.artifact!);
             return existingPanel;
@@ -106,9 +100,6 @@ export class ContractInteractionPanel {
 
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
-        // const accountInfo = {
-        //     address: 
-        // }
         this._panel.onDidChangeViewState(() => {
             this._saveState();
         }, null, this._disposables);
@@ -117,15 +108,6 @@ export class ContractInteractionPanel {
         this._panel.webview.onDidReceiveMessage(
             async (message) => {
                 switch (message.type) {
-                    // case 'declareContract':
-                    //     await this.handleDeclareContract(message.data);
-                    //     break;
-                    // case 'deployContract':
-                    //     await this.handleDeployContract(message.data);
-                    //     break;
-                    // case 'callContract':
-                    //     await this.handleCallContract(message.data);
-                    //     break;
                     case 'getContractData':
                         this._panel.webview.postMessage({
                             type: 'contractData',
@@ -220,68 +202,11 @@ export class ContractInteractionPanel {
         this._update();
     }
 
-    // private async handleDeclareContract(data: any) {
-    //     try {
-    //         console.log('Declaring contract: ', data);
-
-    //         console.log("Handle Declare Contract here");
-    //         const classHash = '0x' + Math.random().toString(16).substring(2, 66);
-
-    //         this._panel.webview.postMessage({
-    //             type: 'declareResult',
-    //             data: { success: true, classHash }
-    //         });
-    //     } catch (err) {
-    //         this._panel.webview.postMessage({
-    //             type: 'declareResult',
-    //             data: { success: false, error: (err as Error).message }
-    //         });
-    //     }
-    // }
-
-    // private async handleDeployContract(data: any) {
-    //     try {
-    //         console.log('Deploying contract:', data);
-            
-    //         // Simulate deployment
-    //         const contractAddress = '0x' + Math.random().toString(16).substring(2, 66);
-            
-    //         this._panel.webview.postMessage({
-    //             type: 'deployResult',
-    //             data: { success: true, contractAddress }
-    //         });
-    //     } catch (error) {
-    //         this._panel.webview.postMessage({
-    //             type: 'deployResult',
-    //             data: { success: false, error: (error as Error).message }
-    //         });
-    //     }
-    // }
-
-    // private async handleCallContract(data: any) {
-    //     try {
-    //         console.log('Calling contract function:', data);
-            
-    //         // Simulate function call
-    //         const result = { result: 'Function executed successfully' };
-            
-    //         this._panel.webview.postMessage({
-    //             type: 'callResult',
-    //             data: { success: true, result }
-    //         });
-    //     } catch (error) {
-    //         this._panel.webview.postMessage({
-    //             type: 'callResult',
-    //             data: { success: false, error: (error as Error).message }
-    //         });
-    //     }
-    // }
-
     public dispose() {
         ContractInteractionPanel.activePanels.delete(this._contract.name);
         this._saveState();
 
-        // Clean up our resources
+        // clean up resources
         this._panel.dispose();
 
         while (this._disposables.length) {
@@ -299,11 +224,9 @@ export class ContractInteractionPanel {
     }
 
     private _getHtmlForWebview(webview: vscode.Webview) {
-        // Check if React build exists
         const reactBuildPath = vscode.Uri.joinPath(this._extensionUri, 'cairo-tester-ui', 'build');
         
         try {
-            // Try to load the built React app
             const scriptUri = webview.asWebviewUri(
                 vscode.Uri.joinPath(reactBuildPath, 'assets', 'index.js')
             );
@@ -313,7 +236,7 @@ export class ContractInteractionPanel {
 
             return this._getReactAppHtml(webview, scriptUri, cssUri);
         } catch {
-            // Fallback to basic HTML if React build doesn't exist
+            // I doubt I will ever need this, but...
             return this._getFallbackHtml(webview);
         }
     }

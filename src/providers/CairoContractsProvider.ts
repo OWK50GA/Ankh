@@ -29,20 +29,10 @@ export class ContractItem extends vscode.TreeItem {
             case 'contract':
                 this.iconPath = new vscode.ThemeIcon('file-code');
                 this.tooltip = `Contract: ${label}`;
-                // this.command = {
-                //     command: 'cairo-tester.itemClicked',
-                //     title: 'Open Contract',
-                //     arguments: [this]
-                // }
                 break;
             case 'deployedContract':
                 this.iconPath = new vscode.ThemeIcon('cloud');
                 this.tooltip = `Deployed Contract: ${label}`;
-                // this.command = {
-                //     command: 'cairo-tester.itemClicked',
-                //     title: 'Interact with Contract',
-                //     arguments: [this]
-                // };
                 break;
             case 'folder':
                 this.iconPath = new vscode.ThemeIcon('folder');
@@ -85,7 +75,7 @@ export class CairoContractProvider implements vscode.TreeDataProvider<ContractIt
 
     getChildren(element?: ContractItem): Thenable<ContractItem[]> {
         if (!element) {
-            // Root level
+            // This is at the root level
             const items: ContractItem[] = [];
             
             if (this.contracts.length > 0) {
@@ -102,6 +92,7 @@ export class CairoContractProvider implements vscode.TreeDataProvider<ContractIt
 
             if (this.contracts.length === 0 && this.deployedContracts.length === 0) {
                 items.push(new ContractItem('No contracts found', 'folder', undefined, vscode.TreeItemCollapsibleState.None));
+                // Show the user a CTA to configure contract workspace root folder
                 items.push(new ContractItem('Configure Cairo workspace root', 'action', undefined, vscode.TreeItemCollapsibleState.None));
             }
             
@@ -134,7 +125,7 @@ export class CairoContractProvider implements vscode.TreeDataProvider<ContractIt
             return;
         }
 
-        // Get all subdirectories in the workspace
+        // Get subdirectories in the workspace
         const subDirectories: { label: string; path: string }[] = [];
         
         for (const folder of workspaceFolders) {
@@ -146,11 +137,11 @@ export class CairoContractProvider implements vscode.TreeDataProvider<ContractIt
                 path: rootPath
             });
 
-            // Recursively find subdirectories
+            // Find subdirectories
             await this.findSubDirectories(rootPath, rootPath, subDirectories, 0, 3); // Max depth of 3
         }
 
-        // Show quick pick for directory selection
+        // Show directory select for subdirectories
         const selectedItem = await vscode.window.showQuickPick(
             subDirectories.map(dir => ({
                 label: dir.label,
@@ -178,7 +169,6 @@ export class CairoContractProvider implements vscode.TreeDataProvider<ContractIt
         }
     }
 
-    // NEW METHOD: Find subdirectories recursively
     private async findSubDirectories(
         basePath: string,
         currentPath: string, 
@@ -208,11 +198,10 @@ export class CairoContractProvider implements vscode.TreeDataProvider<ContractIt
                 }
             }
         } catch (error) {
-            // Ignore directories we can't read
+            console.error(error);
         }
     }
 
-    // NEW METHOD: Check if directory contains Cairo files
     private checkForCairoFiles(dirPath: string): boolean {
         try {
             const items = fs.readdirSync(dirPath);
@@ -228,7 +217,6 @@ export class CairoContractProvider implements vscode.TreeDataProvider<ContractIt
         }
     }
 
-    // NEW METHOD: Clear custom workspace root
     async clearWorkspaceRoot(): Promise<void> {
         this.customWorkspaceRoot = undefined;
         await this.context.workspaceState.update('cairoWorkspaceRoot', undefined);
@@ -236,7 +224,6 @@ export class CairoContractProvider implements vscode.TreeDataProvider<ContractIt
         this.refresh();
     }
 
-    // NEW METHOD: Get current workspace root
     getCurrentWorkspaceRoot(): string | undefined {
         return this.customWorkspaceRoot;
     }
@@ -282,10 +269,6 @@ export class CairoContractProvider implements vscode.TreeDataProvider<ContractIt
         } catch (error) {
             console.error('Error scanning for contracts:', error);
         }
-
-        // Load deployed contracts from extension storage
-        const deployedData = this.context.globalState.get<any[]>('deployedContracts', []);
-        this.deployedContracts = deployedData;
     }
 
     private async parseContractArtifact(filePath: string): Promise<ContractArtifact | null> {
@@ -316,11 +299,5 @@ export class CairoContractProvider implements vscode.TreeDataProvider<ContractIt
             console.error(`Error parsing contract artifact ${filePath}:`, error);
             return null;
         }
-    }
-
-    async addDeployedContract(contract: ContractArtifact): Promise<void> {
-        this.deployedContracts.push(contract);
-        await this.context.globalState.update('deployedContracts', this.deployedContracts);
-        this.refresh();
     }
 }
