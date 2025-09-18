@@ -48,6 +48,8 @@ export default function ContractUI ({ contractData }: {
         { id: "write", label: "Write" }
     ];
 
+    const readyForInteraction = contractFunctionsData?.contractAddress;
+
     const tabContent = useMemo(() => {
         if (!contractFunctionsData) {
             console.log("No contract functions data")
@@ -63,7 +65,7 @@ export default function ContractUI ({ contractData }: {
 
     return (
         <div className="w-11/12 mx-auto flex-col gap-8">
-            <p className="text-2xl">{contractData.contractAddress? `${contractData.name}`: `${contractData.name} - Deploy or Load first`}</p>
+            <p className="text-2xl">{readyForInteraction? `${contractData.name}`:`${contractData.name} - Yet to be deployed`}</p>
             <div className="mt-3">
                 {tabs.map((tab) => (
                 <a

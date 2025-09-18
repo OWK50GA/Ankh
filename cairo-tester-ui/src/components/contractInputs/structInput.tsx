@@ -111,16 +111,18 @@ export const Struct = ({
 
                 return (
                   <div key={index} className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      name={`radio-${index}`}
-                      className="radio radio-xs radio-secondary focus-within:outline-1 outline-[#D57B52]"
-                      checked={index === activeVariantIndex}
-                      onChange={() => {}}
-                      onClick={() => {
-                        setActiveVariantIndex(index);
-                      }}
-                    />
+                    <div className="relative rounded-md p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
+                      <input
+                        type="checkbox"
+                        name={`radio-${index}`}
+                        className="radio radio-xs radio-secondary focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 w-full text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
+                        checked={index === activeVariantIndex}
+                        onChange={() => {}}
+                        onClick={() => {
+                          setActiveVariantIndex(index);
+                        }}
+                      />
+                    </div>
                     <ContractInput
                       setFormErrorMessage={setFormErrorMessage}
                       abi={abi}

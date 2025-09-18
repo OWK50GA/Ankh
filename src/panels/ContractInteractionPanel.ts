@@ -3,9 +3,20 @@ import { ContractArtifact, ContractItem } from '../providers/CairoContractsProvi
 import * as path from 'path';
 import * as fs from 'fs';
 
+interface PanelState {
+    contractName: string;
+    deploymentInfo?: {
+        classHash?: string;
+        contractAddress?: string;
+    };
+    logs?: string[];
+}
+
 export class ContractInteractionPanel {
+    private static activePanels: Map<string, ContractInteractionPanel>  = new Map();
+    private static context: vscode.ExtensionContext;
+
     public static currentPanel: ContractInteractionPanel | undefined;
-    public static activePanels: ContractInteractionPanel[] | []
     public readonly _panel: vscode.WebviewPanel;
     public readonly _extensionUri: vscode.Uri;
     private _disposables: vscode.Disposable[] = [];
@@ -15,16 +26,30 @@ export class ContractInteractionPanel {
         walletAddress?: string;
         rpcUrl?: string;
     } = {};
+    private _state: PanelState;
+
+    public static initialize(context: vscode.ExtensionContext) {
+        ContractInteractionPanel.context = context;
+    }
 
     public static createOrShow(extensionUri: vscode.Uri, contractItem: ContractItem) {
+        const contractName = contractItem.artifact?.name;
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
             : undefined
         
-        if (ContractInteractionPanel.currentPanel) {
-            ContractInteractionPanel.currentPanel._panel.reveal(column);
-            ContractInteractionPanel.currentPanel.updateContract(contractItem.artifact!)
-            return;
+        // if (ContractInteractionPanel.currentPanel) {
+        //     ContractInteractionPanel.currentPanel._panel.reveal(column);
+        //     ContractInteractionPanel.currentPanel.updateContract(contractItem.artifact!)
+        //     return;
+        // }
+
+        const existingPanel = ContractInteractionPanel.activePanels.get(contractName!);
+        if (existingPanel) {
+            // Reveal existing panel and update contract data
+            existingPanel._panel.reveal(column);
+            existingPanel.updateContract(contractItem.artifact!);
+            return existingPanel;
         }
 
         const panel = vscode.window.createWebviewPanel(
@@ -36,15 +61,32 @@ export class ContractInteractionPanel {
                 localResourceRoots: [
                     vscode.Uri.joinPath(extensionUri, 'media'),
                     vscode.Uri.joinPath(extensionUri, 'cairo-tester-ui', 'build'),
-                ]
+                ],
+                retainContextWhenHidden: true,
             }
         )
 
-        ContractInteractionPanel.currentPanel = new ContractInteractionPanel(
+        const contractPanel = new ContractInteractionPanel(
             panel,
             extensionUri,
             contractItem.artifact!
-        )
+        );
+
+        ContractInteractionPanel.activePanels.set(contractName!, contractPanel);
+        return contractPanel;
+    }
+
+    public static getActivePanels(): ContractInteractionPanel[] {
+        return Array.from(ContractInteractionPanel.activePanels.values());
+    }
+
+    public getContractName(panel: ContractInteractionPanel): string {
+        return panel._contract.name;
+    }
+
+    public static closeAll() {
+        ContractInteractionPanel.activePanels.forEach(panel => panel.dispose());
+        ContractInteractionPanel.activePanels.clear();
     }
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, contract: ContractArtifact) {
@@ -52,8 +94,14 @@ export class ContractInteractionPanel {
         this._extensionUri = extensionUri;
         this._contract = contract;
 
-        this._loadEnvironmentVariables();
+        this._state = {
+            contractName: contract.name,
+            deploymentInfo: {},
+            logs: []
+        };
 
+        this._loadEnvironmentVariables();
+        this._loadPersistedState();
         this._update();
 
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
@@ -61,19 +109,23 @@ export class ContractInteractionPanel {
         // const accountInfo = {
         //     address: 
         // }
+        this._panel.onDidChangeViewState(() => {
+            this._saveState();
+        }, null, this._disposables);
+
 
         this._panel.webview.onDidReceiveMessage(
             async (message) => {
                 switch (message.type) {
-                    case 'declareContract':
-                        await this.handleDeclareContract(message.data);
-                        break;
-                    case 'deployContract':
-                        await this.handleDeployContract(message.data);
-                        break;
-                    case 'callContract':
-                        await this.handleCallContract(message.data);
-                        break;
+                    // case 'declareContract':
+                    //     await this.handleDeclareContract(message.data);
+                    //     break;
+                    // case 'deployContract':
+                    //     await this.handleDeployContract(message.data);
+                    //     break;
+                    // case 'callContract':
+                    //     await this.handleCallContract(message.data);
+                    //     break;
                     case 'getContractData':
                         this._panel.webview.postMessage({
                             type: 'contractData',
@@ -86,11 +138,44 @@ export class ContractInteractionPanel {
                             data: this._accountInfo
                         });
                         break;
+                    case 'getPersistentState':
+                        this._panel.webview.postMessage({
+                            type: 'persistentState',
+                            data: this._state
+                        });
+                        break;
+                    case 'updateState':
+                        this._updateState(message.data);
+                        break;
                 }
             },
             null,
             this._disposables
         );
+    }
+
+    private _loadPersistedState() {
+        if (ContractInteractionPanel.context) {
+            const stateKey = `panel-state-${this._contract.name}`;
+            const savedState = ContractInteractionPanel.context.workspaceState.get<PanelState>(stateKey);
+            
+            if (savedState) {
+                this._state = { ...this._state, ...savedState };
+                console.log(`Loaded persisted state for ${this._contract.name}:`, this._state);
+            }
+        }
+    }
+
+     private _saveState() {
+        if (ContractInteractionPanel.context) {
+            const stateKey = `panel-state-${this._contract.name}`;
+            ContractInteractionPanel.context.workspaceState.update(stateKey, this._state);
+        }
+    }
+
+    private _updateState(newState: Partial<PanelState>) {
+        this._state = { ...this._state, ...newState };
+        this._saveState();
     }
 
     private _loadEnvironmentVariables() {
@@ -131,68 +216,70 @@ export class ContractInteractionPanel {
 
     private updateContract(contract: ContractArtifact) {
         this._contract = contract;
+        this._state.contractName = contract.name;
         this._update();
     }
 
-    private async handleDeclareContract(data: any) {
-        try {
-            console.log('Declaring contract: ', data);
+    // private async handleDeclareContract(data: any) {
+    //     try {
+    //         console.log('Declaring contract: ', data);
 
-            console.log("Handle Declare Contract here");
-            const classHash = '0x' + Math.random().toString(16).substring(2, 66);
+    //         console.log("Handle Declare Contract here");
+    //         const classHash = '0x' + Math.random().toString(16).substring(2, 66);
 
-            this._panel.webview.postMessage({
-                type: 'declareResult',
-                data: { success: true, classHash }
-            });
-        } catch (err) {
-            this._panel.webview.postMessage({
-                type: 'declareResult',
-                data: { success: false, error: (err as Error).message }
-            });
-        }
-    }
+    //         this._panel.webview.postMessage({
+    //             type: 'declareResult',
+    //             data: { success: true, classHash }
+    //         });
+    //     } catch (err) {
+    //         this._panel.webview.postMessage({
+    //             type: 'declareResult',
+    //             data: { success: false, error: (err as Error).message }
+    //         });
+    //     }
+    // }
 
-    private async handleDeployContract(data: any) {
-        try {
-            console.log('Deploying contract:', data);
+    // private async handleDeployContract(data: any) {
+    //     try {
+    //         console.log('Deploying contract:', data);
             
-            // Simulate deployment
-            const contractAddress = '0x' + Math.random().toString(16).substring(2, 66);
+    //         // Simulate deployment
+    //         const contractAddress = '0x' + Math.random().toString(16).substring(2, 66);
             
-            this._panel.webview.postMessage({
-                type: 'deployResult',
-                data: { success: true, contractAddress }
-            });
-        } catch (error) {
-            this._panel.webview.postMessage({
-                type: 'deployResult',
-                data: { success: false, error: (error as Error).message }
-            });
-        }
-    }
+    //         this._panel.webview.postMessage({
+    //             type: 'deployResult',
+    //             data: { success: true, contractAddress }
+    //         });
+    //     } catch (error) {
+    //         this._panel.webview.postMessage({
+    //             type: 'deployResult',
+    //             data: { success: false, error: (error as Error).message }
+    //         });
+    //     }
+    // }
 
-    private async handleCallContract(data: any) {
-        try {
-            console.log('Calling contract function:', data);
+    // private async handleCallContract(data: any) {
+    //     try {
+    //         console.log('Calling contract function:', data);
             
-            // Simulate function call
-            const result = { result: 'Function executed successfully' };
+    //         // Simulate function call
+    //         const result = { result: 'Function executed successfully' };
             
-            this._panel.webview.postMessage({
-                type: 'callResult',
-                data: { success: true, result }
-            });
-        } catch (error) {
-            this._panel.webview.postMessage({
-                type: 'callResult',
-                data: { success: false, error: (error as Error).message }
-            });
-        }
-    }
+    //         this._panel.webview.postMessage({
+    //             type: 'callResult',
+    //             data: { success: true, result }
+    //         });
+    //     } catch (error) {
+    //         this._panel.webview.postMessage({
+    //             type: 'callResult',
+    //             data: { success: false, error: (error as Error).message }
+    //         });
+    //     }
+    // }
 
     public dispose() {
-        ContractInteractionPanel.currentPanel = undefined;
+        ContractInteractionPanel.activePanels.delete(this._contract.name);
+        this._saveState();
 
         // Clean up our resources
         this._panel.dispose();

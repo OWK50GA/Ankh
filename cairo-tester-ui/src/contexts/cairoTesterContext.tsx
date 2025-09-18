@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type Dispatch, type FC, type ReactNode, type SetStateAction } from "react";
+import { createContext, useContext, useEffect, useState, type Dispatch, type FC, type ReactNode, type SetStateAction } from "react";
 import type { AccountInfo, ContractArtifact, ContractFunctionData } from "../types";
 
 type NetworkType = "devnet" | "sepolia" | "mainnnet";
@@ -19,6 +19,15 @@ export type CairoTesterContextType = {
     accountInfo: AccountInfo;
     setAccountInfo: Dispatch<SetStateAction<AccountInfo>>;
 };
+
+interface PanelState {
+    contractName: string;
+    deploymentInfo?: {
+        classHash?: string;
+        contractAddress?: string;
+    };
+    logs?: string[];
+}
 
 const CairoTesterContext = createContext<CairoTesterContextType | null>(null);
 
@@ -44,6 +53,38 @@ export const CairoTesterProvider: FC<{ children: ReactNode }> = ({ children }) =
         walletAddress: "",
         rpcUrl: ""
     })
+
+    useEffect(() => {
+        if (window.vscode) {
+            window.vscode.postMessage({ type: 'getPersistentState' });
+        }
+
+        const handlePersistentStateMessage = (event: MessageEvent) => {
+            const message = event.data;
+
+            if (message.type === 'persistentState') {
+                const data = (message.data as PanelState) || (message as PanelState);
+
+                if (data.deploymentInfo) {
+                    const contractAddress = data.deploymentInfo.contractAddress;
+                    const classHash = data.deploymentInfo.classHash;
+
+                    if (contractAddress) {
+                        setContractData((prev: any) => ({...prev, contractAddress: contractAddress}));
+                        setContractFunctionsData((prev: any) => ({...prev, contractAddress: contractAddress}));
+                    }
+                    if (classHash) {
+                        setContractData((prev: any) => ({...prev, classHash: classHash}));
+                        setContractData((prev: any) => ({...prev, classHash: classHash}));
+                    }
+                }
+            }
+        }
+
+        window.addEventListener("message", handlePersistentStateMessage);
+
+        return () => window.removeEventListener("message", handlePersistentStateMessage);
+    }, [])
 
     const value = {
         currentNetwork,

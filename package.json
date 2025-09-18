@@ -39,6 +39,36 @@
       {
         "command": "cairo-tester.interactWithContract",
         "title": "Interact With Contracts"
+      },
+      {
+        "command": "cairo-tester.openContract",
+        "title": "Open Contract Interface",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "cairo-tester.closeAllPanels",
+        "title": "Close All Contract Panels",
+        "icon": "$(close-all)"
+      },
+      {
+        "command": "cairo-tester.showActivePanels",
+        "title": "Show Active Panels",
+        "icon": "$(list-selection)"
+      },
+      {
+        "command": "cairo-tester.selectWorkspaceRoot",
+        "title": "Select Cairo Workspace Root",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "cairo-tester.clearWorkspaceRoot",
+        "title": "Clear Cairo Workspace Root",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "cairo-tester.showWorkspaceRoot",
+        "title": "Show Current Workspace Root",
+        "icon": "$(info)"
       }
     ],
     "views": {
@@ -57,6 +87,21 @@
           "command": "cairo-tester.refreshContracts",
           "when": "inTreeView",
           "group": "navigation"
+        },
+        {
+          "command": "cairo-tester.selectWorkspaceRoot",
+          "when": "view == cairo-tester",
+          "group": "navigation@2"
+        },
+        {
+          "command": "cairo-tester.closeAllPanels",
+          "when": "view == cairo-tester",
+          "group": "navigation@3"
+        },
+        {
+          "command": "cairo-tester.showActivePanels",
+          "when": "view == cairo-tester",
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
@@ -68,6 +113,11 @@
         {
           "command": "cairo-tester.interactWithContract",
           "when": "view == cairoContracts && viewItem == deployedContract",
+          "group": "inline"
+        },
+        {
+          "command": "cairo-tester.openContract",
+          "when": "view == cairo-tester && viewItem == contract || viewItem == deployedContract",
           "group": "inline"
         }
       ]

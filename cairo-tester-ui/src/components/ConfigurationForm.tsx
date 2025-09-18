@@ -158,16 +158,29 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
 
     // For configuration form
     const handleLoadContract = () => {
-        if (!formInputValues.contractAddress || formInputValues.contractAddress === ("" as `0x${string}`)) {
-            throw new Error("Add contractAddress to Load contract");
+        console.log("Loading...")
+
+        try {
+            const { contractAddress, classHash } = formInputValues;
+
+            if (!contractAddress) {
+                throw new Error("Add contractAddress to load contract")
+            }
+
+            setContractData((prev: any) => ({
+                ...prev, 
+                contractAddress,
+                ...(classHash && { classHash: classHash })
+            }))
+
+             setContractFunctionsData((prev: any) => ({
+                ...prev,
+                contractAddress,
+                ...(classHash && { classHash })
+            }));
+        } catch(err) {
+            console.error("Error loading contract", err)
         }
-
-        setContractData(prev => ({
-            ...(prev as any), 
-            contractAddress: formInputValues.contractAddress,
-            classHash: formInputValues.classHash,
-        }))
-
     }
 
     return (
@@ -178,7 +191,7 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
                         <label htmlFor="">
                             Network
                         </label>
-                        <span className={`flex border bg-[#1e1e1e] items-center justify-start gap-4 h-10 rounded-lg p-4 focus-within:border-[#d57b52]`}>
+                        <div className="flex flex-col justify-center rounded-md relative p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
                             <input 
                                 type="text"
                                 // For now, just sepolia is active
@@ -187,9 +200,9 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
                                 onChange={(e) => {
                                     setFormInputValues(prev => ({...prev, network: (e.target.value as NetworkType )}))
                                 }}
-                                className="outline-none w-[300px]"
+                                className="outline-none w-[300px] focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
                             />
-                        </span>
+                        </div>
 
                         {/* <span className=>
                             <PiEnvelopeSimpleFill className='text-gray-600'/>
@@ -207,7 +220,7 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
 
                     <div className="flex-col flex gap-1.5">
                         <label htmlFor="">RpcUrl</label>
-                        <span className="flex border bg-[#1e1e1e] items-center justify-start gap-4 h-10 rounded-lg p-4 focus-within:border-[#d57b52]">
+                        <div className="flex flex-col justify-center rounded-md relative p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
                             <input 
                                 type="text"
                                 // For now, we are using the rpc Url from env
@@ -216,14 +229,14 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
                                 onChange={(e) => {
                                     setFormInputValues(prev => ({...prev, rpcUrl: e.target.value}))
                                 }}
-                                className="outline-none w-[300px]"
+                                className="outline-none w-[300px] focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
                             />
-                        </span>
+                        </div>
                     </div>
 
                     <div className="flex-col flex gap-1.5">
                         <label htmlFor="">Account</label>
-                        <span className="flex border bg-[#1e1e1e] items-center justify-start gap-4 h-10 rounded-lg p-4 focus-within:border-[#d57b52]">
+                        <div className="flex flex-col justify-center rounded-md relative p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
                             <input 
                                 type="text"
                                 // Should be readOnly because the values should come from env
@@ -232,14 +245,14 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
                                 onChange={(e) => {
                                     setFormInputValues(prev => ({...prev, account: (e.target.value as `0x${string}`)}))
                                 }}
-                                className="outline-none w-[300px]"
+                                className="outline-none w-[300px] focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
                             />
-                        </span>
+                        </div>
                     </div>
 
                     <div className="flex-col flex gap-1.5">
                         <label htmlFor="">ClassHash</label>
-                        <span className="flex border bg-[#1e1e1e] items-center justify-start gap-4 h-10 rounded-lg p-4 focus-within:border-[#d57b52]">
+                        <div className="flex flex-col justify-center rounded-md relative p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
                             <input 
                                 type="text"
                                 // Should be readOnly because I do not want it editable now
@@ -248,34 +261,36 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
                                 onChange={(e) => {
                                     setFormInputValues(prev => ({...prev, classHash: e.target.value}))
                                 }}
-                                className="outline-none w-[300px]"
+                                className="outline-none w-[300px] focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
                             />
-                        </span>
+                        </div>
                     </div>
 
                     <div className="flex-col flex gap-1.5">
                         <label htmlFor="">ContractAddress</label>
-                        <span className="flex border bg-[#1e1e1e] items-center justify-start gap-4 h-10 rounded-lg p-4 focus-within:border-[#d57b52]">
+                        <div className="flex flex-col justify-center rounded-md relative p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
                             <input 
                                 type="text"
                                 value={formInputValues.contractAddress}
                                 onChange={(e) => {
                                     setFormInputValues(prev => ({...prev, contractAddress: (e.target.value as `0x${string}`)}))
                                 }}
-                                className="outline-none w-[300px]"
+                                className="outline-none w-[300px] focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
                             />
-                        </span>
+                        </div>
                     </div>
                 </div>
 
                 <div className="flex justify-end gap-2.5">
                     <button
+                        type="button"
                         className="bg-gradient-to-r from-[#9433DC] to-[#D57B52] cursor-pointer px-4 py-2.5 rounded-lg"
-                        onClick={handleLoadContract}
+                        onClick={() => handleLoadContract()}
                     >
                         Load Contract
                     </button>
                     <button
+                        type="button"
                         className="bg-gradient-to-r from-[#9433DC] to-[#D57B52] cursor-pointer px-4 py-2.5 rounded-lg"
                         onClick={() => {}}
                     >
