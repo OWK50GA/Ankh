@@ -4,7 +4,15 @@
   "description": "an extension used to test your cairo code right away",
   "version": "0.0.1",
   "publisher": "wilfridokorie",
-  "icon": "ankh_icon.png",
+  "icon": "assets/ankh_icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OWK50GA/Ankh.git"
+  },
+  "homepage": "https://github.com/OWK50GA/Ankh?tab=readme-ov-file#ankh-readme",
+  "bugs": {
+    "url": "https://github.com/OWK50GA/Ankh/issues"
+  },
   "engines": {
     "vscode": "^1.103.0"
   },
@@ -21,7 +29,7 @@
         {
           "id": "ankh",
           "title": "Ankh",
-          "icon": "ankh.svg"
+          "icon": "ankh_icon.png"
         }
       ]
     },

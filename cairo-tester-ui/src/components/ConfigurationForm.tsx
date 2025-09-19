@@ -157,8 +157,9 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
 
             // setContractAddress((contract.address as `0x${string}`))
             
-            setContractFunctionsData(prev => ({...prev as any, contractAddress: contract.address as `0x${string}`}));
-            setContractData(prev => ({...prev as any, contractAddress: (contract.address as `0x${string}`)}));
+            setContractFunctionsData((prev: any) => ({...prev, contractAddress: contract.address as `0x${string}`}));
+            setContractData((prev: any) => ({...prev, contractAddress: (contract.address as `0x${string}`)}));
+            setFormInputValues((prev: any) => ({...prev, contractAddress: contract.address}))
 
             notifySuccessful("Deployment successful");
         } catch (err) {
@@ -339,7 +340,7 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
                     data-tip={`${getTopErrorMessage(formErrorMessage)}`}
                 >
                     <button
-                        className="btn bg-gradient-to-r from-[#9433DC] to-[#D57B52] shadow-none border-none text-white px-4 py-2.5 rounded-md mt-3"
+                        className="btn bg-gradient-to-r from-[#9433DC] to-[#D57B52] shadow-none border-none text-white px-4 py-2.5 rounded-md mt-3 cursor-pointer disabled:cursor-not-allowed"
                         onClick={() => handleDeploy()}
                         disabled={deploying}
                     >

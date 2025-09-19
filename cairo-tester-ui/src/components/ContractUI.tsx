@@ -63,7 +63,7 @@ export default function ContractUI ({ contractData }: {
                 {tabs.map((tab) => (
                 <a
                     key={tab.id}
-                    className={`tab h-10 w-1/2 px-4 py-1 ${
+                    className={`tab h-10 w-1/2 px-4 py-1 cursor-pointer ${
                     activeTab === tab.id
                         ? "tab-active bg-gradient-to-r from-[#9433DC] to-[#D57B52] rounded-[5px] text-white text-lg font-bold"
                         : "text-xl"

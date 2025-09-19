@@ -172,7 +172,7 @@ export default function WriteContractForm ({
                         data-tip={`${getTopErrorMessage(formErrorMessage)}`}
                     >
                         <button
-                            className="btn bg-gradient-to-r from-[#9433DC] to-[#D57B52] shadow-none border-none text-white disabled:cursor-not-allowed px-2 py-2 rounded-md"
+                            className="btn bg-gradient-to-r from-[#9433DC] to-[#D57B52] shadow-none border-none text-white cursor-pointer disabled:cursor-not-allowed px-2 py-2 rounded-md"
                             // disabled={writeDisabled || isError(formErrorMessage) || isLoading}
                             disabled={isLoading || !readyForInteraction}
                             onClick={handleWrite}

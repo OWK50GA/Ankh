@@ -126,7 +126,7 @@ export default function ReadContractForm({ contractAddress, abiFunction, abi }: 
                     data-tip={`${getTopErrorMessage(formErrorMessage)}`}
                 >
                     <button
-                        className="btn bg-gradient-to-r from-[#9433DC] to-[#D57B52] shadow-none border-none text-white px-2 py-2 rounded-md disabled:cursor-not-allowed"
+                        className="btn bg-gradient-to-r from-[#9433DC] to-[#D57B52] shadow-none border-none text-white px-2 py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
                         onClick={handleRead}
                         disabled={(inputValue) || isError(formErrorMessage) || !readyForInteraction || isReading}
                     >
