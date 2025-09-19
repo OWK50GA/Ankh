@@ -42,7 +42,7 @@ export class ContractItem extends vscode.TreeItem {
                 this.iconPath = new vscode.ThemeIcon('gear');
                 this.tooltip = 'Configure Cairo workspace root';
                 this.command = {
-                    command: 'cairo-tester.selectWorkspaceRoot',
+                    command: 'ankh.selectWorkspaceRoot',
                     title: 'Select Workspace Root',
                     arguments: []
                 };

@@ -1,8 +1,10 @@
 {
-  "name": "cairo-tester",
-  "displayName": "cairo-tester",
+  "name": "ankh",
+  "displayName": "ankh",
   "description": "an extension used to test your cairo code right away",
   "version": "0.0.1",
+  "publisher": "wilfridokorie",
+  "icon": "ankh_icon.png",
   "engines": {
     "vscode": "^1.103.0"
   },
@@ -17,64 +19,64 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "cairo-tester",
-          "title": "Cairo Tester",
-          "icon": "cairo_logo.svg"
+          "id": "ankh",
+          "title": "Ankh",
+          "icon": "ankh.svg"
         }
       ]
     },
     "commands": [
       {
-        "command": "cairo-tester.helloWorld",
+        "command": "ankh.helloWorld",
         "title": "Hello World"
       },
       {
-        "command": "cairo-tester.refreshContracts",
+        "command": "ankh.refreshContracts",
         "title": "Refresh Contracts"
       },
       {
-        "command": "cairo-tester.deployContract",
+        "command": "ankh.deployContract",
         "title": "Deploy Contracts"
       },
       {
-        "command": "cairo-tester.interactWithContract",
+        "command": "ankh.interactWithContract",
         "title": "Interact With Contracts"
       },
       {
-        "command": "cairo-tester.openContract",
+        "command": "ankh.openContract",
         "title": "Open Contract Interface",
         "icon": "$(open-preview)"
       },
       {
-        "command": "cairo-tester.closeAllPanels",
+        "command": "ankh.closeAllPanels",
         "title": "Close All Contract Panels",
         "icon": "$(close-all)"
       },
       {
-        "command": "cairo-tester.showActivePanels",
+        "command": "ankh.showActivePanels",
         "title": "Show Active Panels",
         "icon": "$(list-selection)"
       },
       {
-        "command": "cairo-tester.selectWorkspaceRoot",
+        "command": "ankh.selectWorkspaceRoot",
         "title": "Select Cairo Workspace Root",
         "icon": "$(folder)"
       },
       {
-        "command": "cairo-tester.clearWorkspaceRoot",
+        "command": "ankh.clearWorkspaceRoot",
         "title": "Clear Cairo Workspace Root",
         "icon": "$(clear-all)"
       },
       {
-        "command": "cairo-tester.showWorkspaceRoot",
+        "command": "ankh.showWorkspaceRoot",
         "title": "Show Current Workspace Root",
         "icon": "$(info)"
       }
     ],
     "views": {
-      "cairo-tester": [
+      "ankh": [
         {
-          "id": "cairo-tester",
+          "id": "ankh",
           "name": "Cairo Contracts Tester",
           "when": "worskpaceContains:**/*/.cairo || true",
           "icon": "sn_symbol.svg"
@@ -84,40 +86,40 @@
     "menus": {
       "view/title": [
         {
-          "command": "cairo-tester.refreshContracts",
+          "command": "ankh.refreshContracts",
           "when": "inTreeView",
           "group": "navigation"
         },
         {
-          "command": "cairo-tester.selectWorkspaceRoot",
-          "when": "view == cairo-tester",
+          "command": "ankh.selectWorkspaceRoot",
+          "when": "view == ankh",
           "group": "navigation@2"
         },
         {
-          "command": "cairo-tester.closeAllPanels",
-          "when": "view == cairo-tester",
+          "command": "ankh.closeAllPanels",
+          "when": "view == ankh",
           "group": "navigation@3"
         },
         {
-          "command": "cairo-tester.showActivePanels",
-          "when": "view == cairo-tester",
+          "command": "ankh.showActivePanels",
+          "when": "view == ankh",
           "group": "navigation@4"
         }
       ],
       "view/item/context": [
         {
-          "command": "cairo-tester.deployContract",
+          "command": "ankh.deployContract",
           "when": "view == cairoContracts && viewItem == contract",
           "group": "inline"
         },
         {
-          "command": "cairo-tester.interactWithContract",
+          "command": "ankh.interactWithContract",
           "when": "view == cairoContracts && viewItem == deployedContract",
           "group": "inline"
         },
         {
-          "command": "cairo-tester.openContract",
-          "when": "view == cairo-tester && viewItem == contract || viewItem == deployedContract",
+          "command": "ankh.openContract",
+          "when": "view == ankh && viewItem == contract || viewItem == deployedContract",
           "group": "inline"
         }
       ]
@@ -141,7 +143,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "cd cairo-tester-ui && npm run build && cd .. && tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",

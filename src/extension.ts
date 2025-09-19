@@ -8,18 +8,18 @@ import path from 'path';
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-	console.log('Cairo Tester for Cairo Contracts now active');
+	console.log('ANKH for Cairo Contracts now active');
 
     ContractInteractionPanel.initialize(context);
 
 	const contractProvider = new CairoContractProvider(context);
 
-	const treeView = vscode.window.createTreeView('cairo-tester', {
+	const treeView = vscode.window.createTreeView('ankh', {
 		treeDataProvider: contractProvider,
 		showCollapseAll: true
 	});
 
-    vscode.commands.registerCommand('cairo-tester.itemClicked', (item: ContractItem) => {
+    vscode.commands.registerCommand('ankh.itemClicked', (item: ContractItem) => {
         if (item.type === 'contract' || item.type === 'deployedContract') {
             ContractInteractionPanel.createOrShow(context.extensionUri, item);
         }
@@ -28,26 +28,26 @@ export function activate(context: vscode.ExtensionContext) {
     treeView.onDidChangeSelection((e) => {
         if (e.selection.length > 0) {
             const selectedItem = e.selection[0];
-            vscode.commands.executeCommand('cairo-tester.itemClicked', selectedItem);
+            vscode.commands.executeCommand('ankh.itemClicked', selectedItem);
         }
     })
 
-	const refreshCommand = vscode.commands.registerCommand('cairo-tester.refreshContracts', () => {
+	const refreshCommand = vscode.commands.registerCommand('ankh.refreshContracts', () => {
         contractProvider.refresh();
     });
 
-    const openContractCommand = vscode.commands.registerCommand('cairo-tester.openContract', 
+    const openContractCommand = vscode.commands.registerCommand('ankh.openContract', 
         (item: ContractItem) => {
             ContractInteractionPanel.createOrShow(context.extensionUri, item);
         }
     );
 
-    const closeAllPanelsCommand = vscode.commands.registerCommand('cairo-tester.closeAllPanels', () => {
+    const closeAllPanelsCommand = vscode.commands.registerCommand('ankh.closeAllPanels', () => {
         ContractInteractionPanel.closeAll();
         vscode.window.showInformationMessage('All contract panels closed');
     });
 
-    const showActivePanelsCommand = vscode.commands.registerCommand('cairo-tester.showActivePanels', () => {
+    const showActivePanelsCommand = vscode.commands.registerCommand('ankh.showActivePanels', () => {
         const activePanels = ContractInteractionPanel.getActivePanels();
         if (activePanels.length === 0) {
             vscode.window.showInformationMessage('No active contract panels');
@@ -57,17 +57,17 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    const selectWorkspaceRootCommand = vscode.commands.registerCommand('cairo-tester.selectWorkspaceRoot', async () => {
+    const selectWorkspaceRootCommand = vscode.commands.registerCommand('ankh.selectWorkspaceRoot', async () => {
         await contractProvider.selectWorkspaceRoot();
     });
 
     // Command to clear workspace root
-    const clearWorkspaceRootCommand = vscode.commands.registerCommand('cairo-tester.clearWorkspaceRoot', async () => {
+    const clearWorkspaceRootCommand = vscode.commands.registerCommand('ankh.clearWorkspaceRoot', async () => {
         await contractProvider.clearWorkspaceRoot();
     });
 
     // Command to show current workspace root
-    const showWorkspaceRootCommand = vscode.commands.registerCommand('cairo-tester.showWorkspaceRoot', () => {
+    const showWorkspaceRootCommand = vscode.commands.registerCommand('ankh.showWorkspaceRoot', () => {
         const currentRoot = contractProvider.getCurrentWorkspaceRoot();
         const workspaceFolders = vscode.workspace.workspaceFolders;
         
