@@ -8,34 +8,34 @@ Ankh brings the power of Starknet development directly into your VS Code workspa
 
 ### Smart Contract Management
 
-Automatic Discovery: Automatically scans your workspace for compiled Cairo contracts (target/dev/*.contract_class.json)
-Tree View Interface: Organized view of all contracts in your project with dedicated sections for local and deployed contracts
-Multi-Contract Support: Work with multiple contracts simultaneously, each in its own persistent tab
+- Automatic Discovery: Automatically scans your workspace for compiled Cairo contracts (target/dev/*.contract_class.json)
+- Tree View Interface: Organized view of all contracts in your project with dedicated sections for local and deployed contracts
+- Multi-Contract Support: Work with multiple contracts simultaneously, each in its own persistent tab
 
 ### Full Contract Lifecycle
 
-Declare Contracts: Deploy contract classes to Starknet and receive class hashes
-Deploy Instances: Deploy contract instances from declared classes
-Function Interaction: Call both view and write functions directly from the interface
-Real-time Logging: Track all operations with timestamped logs
+- Declare Contracts: Deploy contract classes to Starknet and receive class hashes
+- Deploy Instances: Deploy contract instances from declared classes
+- Function Interaction: Call both view and write functions directly from the interface
+- Real-time Logging: Track all operations with timestamped logs
 
 ### Developer Experience
 
-Remix-like Interface: Familiar UI similar to Remix IDE with modern VS Code theming
-Persistent State: Contract deployment info and logs persist across VS Code sessions
-Environment Integration: Automatically loads account credentials from .env files
-Monorepo Support: Configure custom workspace roots for projects within larger repositories
+- Remix-like Interface: Familiar UI similar to Remix IDE with modern VS Code theming
+- Persistent State: Contract deployment info and logs persist across VS Code sessions
+- Environment Integration: Automatically loads account credentials from .env files
+- Monorepo Support: Configure custom workspace roots for projects within larger repositories
 
 ### Advanced Capabilities
 
-Multiple Network Support: Works with Sepolia testnet, mainnet, and local devnets
-ABI-Based Interface: Dynamically generates function interfaces from contract ABIs
-Input Validation: Smart input handling for different Cairo data types
-State Management: Remembers deployment information and interaction history
+- Multiple Network Support: Works with Sepolia testnet, mainnet, and local devnets
+- ABI-Based Interface: Dynamically generates function interfaces from contract ABIs
+- Input Validation: Smart input handling for different Cairo data types
+- State Management: Remembers deployment information and interaction history
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+<!-- Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
 
-For example if there is an image subfolder under your extension project workspace:
+For example if there is an image subfolder under your extension project workspace: -->
 
 <!-- \!\[feature X\]\(images/feature-x.png\)
 
@@ -44,9 +44,9 @@ For example if there is an image subfolder under your extension project workspac
 
 ### Installation
 
-Install the extension from the VS Code Marketplace
-Open a Cairo project with compiled contracts in target/dev/
-View contracts in the Ankh panel in the Explorer sidebar
+- Install the extension from the VS Code Marketplace
+- Open a Cairo project with compiled contracts in target/dev/
+- View contracts in the Ankh panel in the Explorer sidebar
 
 <!-- ## Requirements -->
 
@@ -97,12 +97,12 @@ For monorepos where cairo contracts are not in the root workspace root:
 ## Commands
 Access these commands via the Command Palette (```Ctrl+Shift+P```):
 
-```Ankh: Refresh Contracts``` - Rescan workspace for contracts
-```Ankh: Select Cairo Workspace Root``` - Configure custom project root
-```Ankh: Clear Cairo Workspace Root``` - Reset to default workspace scanning
-```Ankh: Show Current Workspace Root``` - Display current configuration
-```Ankh: Close All Contract Panels``` - Close all open contract interfaces
-```Ankh: Show Active Panels``` - List currently open contract panels
+- ```Ankh: Refresh Contracts``` - Rescan workspace for contracts
+- ```Ankh: Select Cairo Workspace Root``` - Configure custom project root
+- ```Ankh: Clear Cairo Workspace Root``` - Reset to default workspace scanning
+- ```Ankh: Show Current Workspace Root``` - Display current configuration
+- ```Ankh: Close All Contract Panels``` - Close all open contract interfaces
+- ```Ankh: Show Active Panels``` - List currently open contract panels
 
 ## Interface Overview
 
@@ -113,7 +113,7 @@ Access these commands via the Command Palette (```Ctrl+Shift+P```):
 - Interact with an already-deployed address of a contract provided it is the same abi (or even similar enough)
 <!-- - Persistent deployment information across sessions -->
 
-\!\[Ankh UI\]\(./assets/panel-view.png\)
+\!\[Ankh UI\]\(./assets/ankh-panel-view.png\)
 
 ### Function Interaction
 
@@ -131,15 +131,16 @@ Network configuration is handled through environment variables.
 
 ## Requirements
 
-VS Code 1.74.0 or higher
-Cairo project with Scarb configuration
-Compiled contracts in target/dev/ directory
+- VS Code 1.74.0 or higher
+- Cairo project with Scarb configuration
+- Compiled contracts in target/dev/ directory
 
 ## Extension Settings
 Ankh stores workspace-specific settings including:
 
-Custom workspace root paths
-Panel state and logs
+- Custom workspace root paths
+- Panel state and logs
+
 All settings are automatically saved and restored per workspace.
 
 ## Troubleshooting
