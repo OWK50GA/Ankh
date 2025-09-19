@@ -37,9 +37,9 @@ Describe specific features of your extension including screenshots of your exten
 
 For example if there is an image subfolder under your extension project workspace:
 
-\!\[feature X\]\(images/feature-x.png\)
+<!-- \!\[feature X\]\(images/feature-x.png\)
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow. -->
 
 
 ### Installation
@@ -70,14 +70,14 @@ RPC_URL_SEPOLIA=https://starknet-sepolia.public.blastapi.io/rpc/v0_8
 ### Basic Usage
 - View Contracts: Compiled contracts appear automatically in the Ankh tree view
 
-\!\[Contracts Tree View\]\(assets/ankh-tree-view.png\)
+\!\[Contracts Tree View\]\(./assets/ankh-tree-view.png\)
 
 - Open Interface: Click any contract to open its interaction interface
 - Declare: Click "Declare Contract" to deploy the contract class
 - Deploy: After declaration, click "Deploy Contract" to create an instance
 - Interact: Use the generated function interface to call contract methods
 
-\!\[Sidebar view\]\(assets/show-ankh-sidebar.png\)
+\!\[Sidebar view\]\(./assets/show-ankh-sidebar.png\)
 
 ## Configuration
 
@@ -113,7 +113,7 @@ Access these commands via the Command Palette (```Ctrl+Shift+P```):
 - Interact with an already-deployed address of a contract provided it is the same abi (or even similar enough)
 <!-- - Persistent deployment information across sessions -->
 
-\!\[Ankh UI\]\(assets/panel-view.png\)
+\!\[Ankh UI\]\(./assets/panel-view.png\)
 
 ### Function Interaction
 
