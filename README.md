@@ -67,6 +67,13 @@ ACCOUNT_ADDRESS_SEPOLIA=0x5678...
 RPC_URL_SEPOLIA=https://starknet-sepolia.public.blastapi.io/rpc/v0_8
 ```
 
+- In your scarb.toml in your root contracts folder, set the line:
+```
+[[target.starknet-contract]]
+sierra = true
+casm = true
+```
+
 ### Basic Usage
 - View Contracts: Compiled contracts appear automatically in the Ankh tree view
 
