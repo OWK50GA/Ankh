@@ -76,7 +76,7 @@ export default function ReadContractForm({ contractAddress, abiFunction, abi }: 
 
         setIsReading(true);
         try {
-            const data = await contract.call(`${abiFunction.name}`, inputValue);
+            const data = await contract.call(`${abiFunction.name}`, newInputValue);
             console.log(data);
             setData(() => data);
         } catch (err) {

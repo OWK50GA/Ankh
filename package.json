@@ -1,7 +1,7 @@
 {
   "name": "ankh",
   "displayName": "Ankh",
-  "description": "an extension used to test your cairo code right away",
+  "description": "Test your cairo code on the fly with a UI provided right away",
   "version": "0.0.2",
   "publisher": "wilfridokorie",
   "icon": "assets/ankh_icon.png",

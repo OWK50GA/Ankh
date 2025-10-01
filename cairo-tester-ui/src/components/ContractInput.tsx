@@ -41,6 +41,7 @@ export default function ContractInput({
 
     const renderInput = () => {
         if (isCairoArray(paramType.type)) {
+        console.log("IsCairoArray returned true for this")
         return (
             <ArrayInput
             abi={abi!}
