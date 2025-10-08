@@ -65,24 +65,27 @@ export const Struct = ({
     return value;
   }), activeVariantIndex]);
 
-  if (!abiMember) return null;
+  console.log("Struct received abiMember:", abiMember, "for key", parentStateObjectKey);
+
+  if (!abiMember){
+    console.log('Abi member not found')
+    return null;
+  };
 
   return (
     <div>
       <div
-        className={`collapse bg-base-200 pl-4 pt-1.5  border-2 ${
-          isDisabled ? "border-base-100 cursor-not-allowed" : "border-secondary"
-        } custom-after`}
+        className={`pl-4 pt-1.5`}
       >
-        {!isDisabled && <input type="checkbox" className="min-h-fit peer" />}
+        {/* {!isDisabled && <input type="checkbox" className="min-h-fit peer" />} */}
         <div
-          className={`collapse-title p-0 min-h-fit peer-checked:mb-2 text-primary-content/50 ${
+          className={`p-0 min-h-fit peer-checked:mb-2 text-primary-content/50 ${
             isDisabled && "cursor-not-allowed pb-2"
           } `}
         >
           <p className="m-0 p-0 text-[1rem]">{abiMember.type}</p>
         </div>
-        <div className="ml-3 flex-col space-y-4 border-secondary/80 peer-checked:mb-3 border-l-2 pl-4 collapse-content">
+        <div className="ml-3 flex-col space-y-4 border-secondary/80 peer-checked:mb-3 border-l-2 pl-4">
           {abiMember.type === "struct"
             ? abiMember.members.map((member, index) => {
                 const key = getFunctionInputKey(
@@ -111,11 +114,11 @@ export const Struct = ({
 
                 return (
                   <div key={index} className="flex items-center gap-3">
-                    <div className="relative rounded-md p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
+                    <div className="relative rounded-md p-[1px] w-fit">
                       <input
                         type="checkbox"
                         name={`radio-${index}`}
-                        className="radio radio-xs radio-secondary focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 w-full text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
+                        className="radio radio-xs radio-secondary focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] border border-gray-600 w-full text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
                         checked={index === activeVariantIndex}
                         onChange={() => {}}
                         onClick={() => {
