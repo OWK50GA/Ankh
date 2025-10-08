@@ -141,7 +141,7 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
             const calldata = new CallData(contractData.abi).compile("constructor", values);
             console.log(calldata);
 
-            const contract = await deployContract(
+            const { contract, classHash } = await deployContract(
                 contractData,
                 accountInfo.rpcUrl,
                 accountInfo.walletAddress,
@@ -159,7 +159,7 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
             
             setContractFunctionsData((prev: any) => ({...prev, contractAddress: contract.address as `0x${string}`}));
             setContractData((prev: any) => ({...prev, contractAddress: (contract.address as `0x${string}`)}));
-            setFormInputValues((prev: any) => ({...prev, contractAddress: contract.address}))
+            setFormInputValues((prev: any) => ({...prev, contractAddress: contract.address, classHash}))
 
             notifySuccessful("Deployment successful");
         } catch (err) {
@@ -266,7 +266,7 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
 
                     <div className="flex-col flex gap-1.5">
                         <label htmlFor="">ClassHash</label>
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-2">
                             <div className="flex items-center justify-center rounded-md relative p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
                                 <input 
                                     type="text"
@@ -330,7 +330,9 @@ export default function ConfigurationForm({ contractData, accountInfo }: {
             <div className="flex flex-col bg-[#161616]">
                 <p>Constructor Calldata</p>
 
-                {inputElements}
+                <div className="flex flex-col gap-3.5">
+                    {inputElements}
+                </div>
 
                 <div
                     className={`flex ${

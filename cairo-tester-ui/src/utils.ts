@@ -1148,7 +1148,10 @@ export async function deployContract(
   accountAddress: string,
   privateKey: string,
   constructorCalldata: Calldata
-): Promise<Contract> {
+): Promise<{
+  contract: Contract,
+  classHash: string
+}> {
 
   try {
     const compiledSierra = getCompiledSierra(contractData)
@@ -1164,21 +1167,7 @@ export async function deployContract(
     );
     console.log("account available");
 
-    // const { class_hash, transaction_hash: declareTxHash } = await account.declare(
-    //   {
-    //     contract: compiledSierra
-    //   }
-    // );
-
-    // console.log(declareTxHash);
-
     const salt = Math.floor(Math.random() * 1000000).toString();
-
-    // const { contract_address, transaction_hash: deployTxHash } = await account.deploy({
-    //   classHash: class_hash,
-    //   constructorCalldata: constructorCalldata ? constructorCalldata : undefined,
-    //   salt,
-    // })
 
     const { contract: _extractedContract, classHash, compiledClassHash, casm } = extractContractHashes({
       contract: compiledSierra,
@@ -1209,18 +1198,10 @@ export async function deployContract(
     console.log(declare.transaction_hash);
     console.log(deploy.transaction_hash);
 
-    // const factory = new ContractFactory({
-    //   compiledContract: compiledSierra,
-    //   account,
-    //   abi: contractData.abi,
-    // });
-
-    // console.log("factory started");
-
-    // const contract = await factory.deploy(...constructorCalldata)
-    // console.log("contract deployed");
-
-    return contract;
+    return {
+      contract,
+      classHash
+    };
   } catch (err) {
     console.error("Error deploying contract: ", (err as Error).message);
     throw err;

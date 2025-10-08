@@ -76,15 +76,13 @@ casm = true
 
 ### Basic Usage
 - View Contracts: Compiled contracts appear automatically in the Ankh tree view
-
-\!\[Contracts Tree View\]\(./assets/ankh-tree-view.png\)
-
+<!-- \!\[Contracts Tree View\]\(./assets/ankh-tree-view.png\) -->
 - Open Interface: Click any contract to open its interaction interface
 - Declare: Click "Declare Contract" to deploy the contract class
 - Deploy: After declaration, click "Deploy Contract" to create an instance
 - Interact: Use the generated function interface to call contract methods
 
-\!\[Sidebar view\]\(./assets/show-ankh-sidebar.png\)
+<!-- \!\[Sidebar view\]\(./assets/show-ankh-sidebar.png\) -->
 
 ## Configuration
 
@@ -120,7 +118,7 @@ Access these commands via the Command Palette (```Ctrl+Shift+P```):
 - Interact with an already-deployed address of a contract provided it is the same abi (or even similar enough)
 <!-- - Persistent deployment information across sessions -->
 
-\!\[Ankh UI\]\(./assets/ankh-panel-view.png\)
+<!-- \!\[Ankh UI\]\(./assets/ankh-panel-view.png\) -->
 
 ### Function Interaction
 
@@ -138,7 +136,7 @@ Network configuration is handled through environment variables.
 
 ## Requirements
 
-- VS Code 1.74.0 or higher
+- VS Code 1.103.0 or higher
 - Cairo project with Scarb configuration
 - Compiled contracts in target/dev/ directory
 

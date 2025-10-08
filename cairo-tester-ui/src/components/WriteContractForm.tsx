@@ -110,7 +110,7 @@ export default function WriteContractForm ({
 
         const values = Object.values(form);
         console.log("Values: ", values);
-        const isValid = formIsValid(values);
+        const isValid = formIsValid(inputValues);
 
         if (!isValid) {
             notifyFailed("Values not filled completely");
