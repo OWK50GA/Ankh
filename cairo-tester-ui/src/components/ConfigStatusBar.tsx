@@ -1,5 +1,5 @@
 import { ChevronDown, Settings } from "lucide-react";
-import { NewCopyButton } from "./CopyButton";
+import { CopyButton } from "./CopyButton";
 
 export const ConfigStatusBar = ({
   network,
@@ -26,14 +26,14 @@ export const ConfigStatusBar = ({
             <span className="font-medium text-[#9BDBFF] truncate">
               {rpcUrl}
             </span>
-            <NewCopyButton copyText={rpcUrl} className="flex-shrink-0" />
+            <CopyButton copyText={rpcUrl} className="flex-shrink-0" />
           </div>
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-gray-400">Account:</span>
             <span className="font-medium text-[#9BDBFF] truncate">
               {account}
             </span>
-            <NewCopyButton copyText={account} className="flex-shrink-0" />
+            <CopyButton copyText={account} className="flex-shrink-0" />
           </div>
         </div>
       </div>
