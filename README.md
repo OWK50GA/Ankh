@@ -21,14 +21,14 @@ Ankh brings the power of Starknet development directly into your VS Code workspa
 
 ### Developer Experience
 
-- Remix-like Interface: Familiar UI similar to Remix IDE with modern VS Code theming
+- Intuitive Interface: Familiar UI similar to API Clients with modern VS Code theming
 - Persistent State: Contract deployment info and logs persist across VS Code sessions
 - Environment Integration: Automatically loads account credentials from .env files
 - Monorepo Support: Configure custom workspace roots for projects within larger repositories
 
 ### Advanced Capabilities
 
-- Multiple Network Support: Works with Sepolia testnet, mainnet, and local devnets
+<!-- - Multiple Network Support: Works with Sepolia testnet, mainnet, and local devnets -->
 - ABI-Based Interface: Dynamically generates function interfaces from contract ABIs
 - Input Validation: Smart input handling for different Cairo data types
 - State Management: Remembers deployment information and interaction history
