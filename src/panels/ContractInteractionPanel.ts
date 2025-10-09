@@ -1,250 +1,283 @@
-import * as vscode from 'vscode'
-import { ContractArtifact, ContractItem } from '../providers/CairoContractsProvider';
-import * as path from 'path';
-import * as fs from 'fs';
+import * as vscode from "vscode";
+import {
+  ContractArtifact,
+  ContractItem,
+} from "../providers/CairoContractsProvider";
+import * as path from "path";
+import * as fs from "fs";
 
 interface PanelState {
-    contractName: string;
-    deploymentInfo?: {
-        classHash?: string;
-        contractAddress?: string;
-    };
-    logs?: string[];
+  contractName: string;
+  deploymentInfo?: {
+    classHash?: string;
+    contractAddress?: string;
+  };
+  logs?: string[];
 }
 
 export class ContractInteractionPanel {
-    private static activePanels: Map<string, ContractInteractionPanel>  = new Map();
-    private static context: vscode.ExtensionContext;
+  private static activePanels: Map<string, ContractInteractionPanel> =
+    new Map();
+  private static context: vscode.ExtensionContext;
 
-    public static currentPanel: ContractInteractionPanel | undefined;
-    public readonly _panel: vscode.WebviewPanel;
-    public readonly _extensionUri: vscode.Uri;
-    private _disposables: vscode.Disposable[] = [];
-    private _contract: ContractArtifact;
-    private _accountInfo: {
-        privateKey?: string;
-        walletAddress?: string;
-        rpcUrl?: string;
-    } = {};
-    private _state: PanelState;
+  public static currentPanel: ContractInteractionPanel | undefined;
+  public readonly _panel: vscode.WebviewPanel;
+  public readonly _extensionUri: vscode.Uri;
+  private _disposables: vscode.Disposable[] = [];
+  private _contract: ContractArtifact;
+  private _accountInfo: {
+    privateKey?: string;
+    walletAddress?: string;
+    rpcUrl?: string;
+  } = {};
+  private _state: PanelState;
 
-    public static initialize(context: vscode.ExtensionContext) {
-        ContractInteractionPanel.context = context;
+  public static initialize(context: vscode.ExtensionContext) {
+    ContractInteractionPanel.context = context;
+  }
+
+  public static createOrShow(
+    extensionUri: vscode.Uri,
+    contractItem: ContractItem,
+  ) {
+    const contractName = contractItem.artifact?.name;
+    const column = vscode.window.activeTextEditor
+      ? vscode.window.activeTextEditor.viewColumn
+      : undefined;
+
+    const existingPanel = ContractInteractionPanel.activePanels.get(
+      contractName!,
+    );
+    if (existingPanel) {
+      // If a panel already exists, just switch to the panel
+      existingPanel._panel.reveal(column);
+      existingPanel.updateContract(contractItem.artifact!);
+      return existingPanel;
     }
 
-    public static createOrShow(extensionUri: vscode.Uri, contractItem: ContractItem) {
-        const contractName = contractItem.artifact?.name;
-        const column = vscode.window.activeTextEditor
-            ? vscode.window.activeTextEditor.viewColumn
-            : undefined
+    const panel = vscode.window.createWebviewPanel(
+      "contractInteraction",
+      `${contractItem.label} - Contract Interaction`,
+      column || vscode.ViewColumn.One,
+      {
+        enableScripts: true,
+        localResourceRoots: [
+          vscode.Uri.joinPath(extensionUri, "media"),
+          vscode.Uri.joinPath(extensionUri, "cairo-tester-ui", "build"),
+        ],
+        retainContextWhenHidden: true,
+      },
+    );
 
-        const existingPanel = ContractInteractionPanel.activePanels.get(contractName!);
-        if (existingPanel) {
-            // If a panel already exists, just switch to the panel
-            existingPanel._panel.reveal(column);
-            existingPanel.updateContract(contractItem.artifact!);
-            return existingPanel;
+    const contractPanel = new ContractInteractionPanel(
+      panel,
+      extensionUri,
+      contractItem.artifact!,
+    );
+
+    ContractInteractionPanel.activePanels.set(contractName!, contractPanel);
+    return contractPanel;
+  }
+
+  public static getActivePanels(): ContractInteractionPanel[] {
+    return Array.from(ContractInteractionPanel.activePanels.values());
+  }
+
+  public getContractName(panel: ContractInteractionPanel): string {
+    return panel._contract.name;
+  }
+
+  public static closeAll() {
+    ContractInteractionPanel.activePanels.forEach((panel) => panel.dispose());
+    ContractInteractionPanel.activePanels.clear();
+  }
+
+  private constructor(
+    panel: vscode.WebviewPanel,
+    extensionUri: vscode.Uri,
+    contract: ContractArtifact,
+  ) {
+    this._panel = panel;
+    this._extensionUri = extensionUri;
+    this._contract = contract;
+
+    this._state = {
+      contractName: contract.name,
+      deploymentInfo: {},
+      logs: [],
+    };
+
+    this._loadEnvironmentVariables();
+    this._loadPersistedState();
+    this._update();
+
+    this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+
+    this._panel.onDidChangeViewState(
+      () => {
+        this._saveState();
+      },
+      null,
+      this._disposables,
+    );
+
+    this._panel.webview.onDidReceiveMessage(
+      async (message) => {
+        switch (message.type) {
+          case "getContractData":
+            this._panel.webview.postMessage({
+              type: "contractData",
+              data: this._contract,
+            });
+            break;
+          case "getAccountInfo":
+            this._panel.webview.postMessage({
+              type: "accountInfo",
+              data: this._accountInfo,
+            });
+            break;
+          case "getPersistentState":
+            this._panel.webview.postMessage({
+              type: "persistentState",
+              data: this._state,
+            });
+            break;
+          case "updateState":
+            this._updateState(message.data);
+            break;
         }
+      },
+      null,
+      this._disposables,
+    );
+  }
 
-        const panel = vscode.window.createWebviewPanel(
-            'contractInteraction',
-            `${contractItem.label} - Contract Interaction`,
-            column || vscode.ViewColumn.One,
-            {
-                enableScripts: true,
-                localResourceRoots: [
-                    vscode.Uri.joinPath(extensionUri, 'media'),
-                    vscode.Uri.joinPath(extensionUri, 'cairo-tester-ui', 'build'),
-                ],
-                retainContextWhenHidden: true,
-            }
-        )
-
-        const contractPanel = new ContractInteractionPanel(
-            panel,
-            extensionUri,
-            contractItem.artifact!
+  private _loadPersistedState() {
+    if (ContractInteractionPanel.context) {
+      const stateKey = `panel-state-${this._contract.name}`;
+      const savedState =
+        ContractInteractionPanel.context.workspaceState.get<PanelState>(
+          stateKey,
         );
 
-        ContractInteractionPanel.activePanels.set(contractName!, contractPanel);
-        return contractPanel;
-    }
-
-    public static getActivePanels(): ContractInteractionPanel[] {
-        return Array.from(ContractInteractionPanel.activePanels.values());
-    }
-
-    public getContractName(panel: ContractInteractionPanel): string {
-        return panel._contract.name;
-    }
-
-    public static closeAll() {
-        ContractInteractionPanel.activePanels.forEach(panel => panel.dispose());
-        ContractInteractionPanel.activePanels.clear();
-    }
-
-    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, contract: ContractArtifact) {
-        this._panel = panel;
-        this._extensionUri = extensionUri;
-        this._contract = contract;
-
-        this._state = {
-            contractName: contract.name,
-            deploymentInfo: {},
-            logs: []
-        };
-
-        this._loadEnvironmentVariables();
-        this._loadPersistedState();
-        this._update();
-
-        this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
-
-        this._panel.onDidChangeViewState(() => {
-            this._saveState();
-        }, null, this._disposables);
-
-
-        this._panel.webview.onDidReceiveMessage(
-            async (message) => {
-                switch (message.type) {
-                    case 'getContractData':
-                        this._panel.webview.postMessage({
-                            type: 'contractData',
-                            data: this._contract
-                        });
-                        break;
-                    case 'getAccountInfo':
-                        this._panel.webview.postMessage({
-                            type: 'accountInfo',
-                            data: this._accountInfo
-                        });
-                        break;
-                    case 'getPersistentState':
-                        this._panel.webview.postMessage({
-                            type: 'persistentState',
-                            data: this._state
-                        });
-                        break;
-                    case 'updateState':
-                        this._updateState(message.data);
-                        break;
-                }
-            },
-            null,
-            this._disposables
+      if (savedState) {
+        this._state = { ...this._state, ...savedState };
+        console.log(
+          `Loaded persisted state for ${this._contract.name}:`,
+          this._state,
         );
+      }
     }
+  }
 
-    private _loadPersistedState() {
-        if (ContractInteractionPanel.context) {
-            const stateKey = `panel-state-${this._contract.name}`;
-            const savedState = ContractInteractionPanel.context.workspaceState.get<PanelState>(stateKey);
-            
-            if (savedState) {
-                this._state = { ...this._state, ...savedState };
-                console.log(`Loaded persisted state for ${this._contract.name}:`, this._state);
-            }
-        }
+  private _saveState() {
+    if (ContractInteractionPanel.context) {
+      const stateKey = `panel-state-${this._contract.name}`;
+      ContractInteractionPanel.context.workspaceState.update(
+        stateKey,
+        this._state,
+      );
     }
+  }
 
-     private _saveState() {
-        if (ContractInteractionPanel.context) {
-            const stateKey = `panel-state-${this._contract.name}`;
-            ContractInteractionPanel.context.workspaceState.update(stateKey, this._state);
-        }
-    }
+  private _updateState(newState: Partial<PanelState>) {
+    this._state = { ...this._state, ...newState };
+    this._saveState();
+  }
 
-    private _updateState(newState: Partial<PanelState>) {
-        this._state = { ...this._state, ...newState };
-        this._saveState();
-    }
+  private _loadEnvironmentVariables() {
+    try {
+      if (!this._accountInfo.privateKey || !this._accountInfo.walletAddress) {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (workspaceFolders && workspaceFolders.length > 0) {
+          const envPath = path.join(workspaceFolders[0].uri.fsPath, ".env");
 
-    private _loadEnvironmentVariables() {
-        try {
-            if (!this._accountInfo.privateKey || !this._accountInfo.walletAddress) {
-                const workspaceFolders = vscode.workspace.workspaceFolders;
-                if (workspaceFolders && workspaceFolders.length > 0) {
-                    const envPath = path.join(workspaceFolders[0].uri.fsPath, '.env');
+          if (fs.existsSync(envPath)) {
+            const envContent = fs.readFileSync(envPath, "utf8");
+            const envLines = envContent.split("\n");
 
-                    if (fs.existsSync(envPath)) {
-                        const envContent = fs.readFileSync(envPath, 'utf8');
-                        const envLines = envContent.split('\n');
+            envLines.forEach((line) => {
+              const [key, value] = line.split("=");
+              if (key && value) {
+                const trimmedKey = key.trim();
+                const trimmedValue = value.trim();
 
-                        envLines.forEach(line => {
-                            const [key, value] = line.split('=');
-                            if (key && value) {
-                                const trimmedKey = key.trim();
-                                const trimmedValue = value.trim();
-
-                                if (trimmedKey === 'PRIVATE_KEY_SEPOLIA') {
-                                    this._accountInfo.privateKey = trimmedValue;
-                                } else if (trimmedKey === 'RPC_URL_SEPOLIA') {
-                                    this._accountInfo.rpcUrl = trimmedValue;
-                                } else if (trimmedKey === 'ACCOUNT_ADDRESS_SEPOLIA') {
-                                    this._accountInfo.walletAddress = trimmedValue;
-                                }
-                            }
-                        });
-
-                        // console.log("Loaded account info: ", this._accountInfo);
-                    }
+                if (trimmedKey === "PRIVATE_KEY_SEPOLIA") {
+                  this._accountInfo.privateKey = trimmedValue;
+                } else if (trimmedKey === "RPC_URL_SEPOLIA") {
+                  this._accountInfo.rpcUrl = trimmedValue;
+                } else if (trimmedKey === "ACCOUNT_ADDRESS_SEPOLIA") {
+                  this._accountInfo.walletAddress = trimmedValue;
                 }
-            }
-        } catch (err) {
-            console.error("Failed to load environment variables: ", err);
+              }
+            });
+
+            // console.log("Loaded account info: ", this._accountInfo);
+          }
         }
+      }
+    } catch (err) {
+      console.error("Failed to load environment variables: ", err);
     }
+  }
 
-    private updateContract(contract: ContractArtifact) {
-        this._contract = contract;
-        this._state.contractName = contract.name;
-        this._update();
+  private updateContract(contract: ContractArtifact) {
+    this._contract = contract;
+    this._state.contractName = contract.name;
+    this._update();
+  }
+
+  public dispose() {
+    ContractInteractionPanel.activePanels.delete(this._contract.name);
+    this._saveState();
+
+    // clean up resources
+    this._panel.dispose();
+
+    while (this._disposables.length) {
+      const x = this._disposables.pop();
+      if (x) {
+        x.dispose();
+      }
     }
+  }
 
-    public dispose() {
-        ContractInteractionPanel.activePanels.delete(this._contract.name);
-        this._saveState();
+  private _update() {
+    const webview = this._panel.webview;
+    this._panel.title = `${this._contract.name} - Contract Interaction`;
+    this._panel.webview.html = this._getHtmlForWebview(webview);
+  }
 
-        // clean up resources
-        this._panel.dispose();
+  private _getHtmlForWebview(webview: vscode.Webview) {
+    const reactBuildPath = vscode.Uri.joinPath(
+      this._extensionUri,
+      "cairo-tester-ui",
+      "build",
+    );
 
-        while (this._disposables.length) {
-            const x = this._disposables.pop();
-            if (x) {
-                x.dispose();
-            }
-        }
+    try {
+      const scriptUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(reactBuildPath, "assets", "index.js"),
+      );
+      const cssUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(reactBuildPath, "assets", "index.css"),
+      );
+
+      return this._getReactAppHtml(webview, scriptUri, cssUri);
+    } catch {
+      // I doubt I will ever need this, but...
+      return this._getFallbackHtml(webview);
     }
+  }
 
-    private _update() {
-        const webview = this._panel.webview;
-        this._panel.title = `${this._contract.name} - Contract Interaction`;
-        this._panel.webview.html = this._getHtmlForWebview(webview);
-    }
+  private _getReactAppHtml(
+    webview: vscode.Webview,
+    scriptUri: vscode.Uri,
+    cssUri: vscode.Uri,
+  ): string {
+    const nonce = this._getNonce();
 
-    private _getHtmlForWebview(webview: vscode.Webview) {
-        const reactBuildPath = vscode.Uri.joinPath(this._extensionUri, 'cairo-tester-ui', 'build');
-        
-        try {
-            const scriptUri = webview.asWebviewUri(
-                vscode.Uri.joinPath(reactBuildPath, 'assets', 'index.js')
-            );
-            const cssUri = webview.asWebviewUri(
-                vscode.Uri.joinPath(reactBuildPath, 'assets', 'index.css')
-            );
-
-            return this._getReactAppHtml(webview, scriptUri, cssUri);
-        } catch {
-            // I doubt I will ever need this, but...
-            return this._getFallbackHtml(webview);
-        }
-    }
-
-    private _getReactAppHtml(webview: vscode.Webview, scriptUri: vscode.Uri, cssUri: vscode.Uri): string {
-        const nonce = this._getNonce();
-
-        return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="utf-8" />
@@ -283,12 +316,12 @@ export class ContractInteractionPanel {
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>`;
-    }
+  }
 
-    private _getFallbackHtml(webview: vscode.Webview): string {
-        const nonce = this._getNonce();
+  private _getFallbackHtml(webview: vscode.Webview): string {
+    const nonce = this._getNonce();
 
-        return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
@@ -511,14 +544,15 @@ export class ContractInteractionPanel {
                 </script>
             </body>
             </html>`;
-    }
+  }
 
-    private _getNonce() {
-        let text = '';
-        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (let i = 0; i < 32; i++) {
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
-        }
-        return text;
+  private _getNonce() {
+    let text = "";
+    const possible =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for (let i = 0; i < 32; i++) {
+      text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
+    return text;
+  }
 }

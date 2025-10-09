@@ -1,7 +1,58 @@
 import type { Abi } from "abi-wan-kanabi";
-import type { AbiConstructor, AbiEnum, AbiFunction, AbiOutput, AbiParameter, AbiStateMutability, AbiStruct, ContractArtifact, FormErrorMessageState } from "./types";
-import type { CairoBigInt, CairoBool, CairoByteArray, CairoBytes31, CairoClassHash, CairoContractAddress, CairoEthAddress, CairoFelt, CairoFunction, CairoInt, CairoSecp256k1Point, CairoTuple, CairoU256, CairoVoid } from "abi-wan-kanabi/kanabi";
-import { Account, cairo, CairoCustomEnum, CairoOption, CairoOptionVariant, CairoResult, CairoResultVariant, constants, Contract, extractContractHashes, getChecksumAddress, num, RpcError, RpcProvider, stark, transaction, type CairoAssembly, type Calldata, type CompiledSierra, type DeclareContractPayload, type RawArgs, type SierraEntryPointsByType, type SierraProgramDebugInfo, type Uint256, type UniversalDetails } from "starknet";
+import type {
+  AbiConstructor,
+  AbiEnum,
+  AbiFunction,
+  AbiOutput,
+  AbiParameter,
+  AbiStateMutability,
+  AbiStruct,
+  ContractArtifact,
+  FormErrorMessageState,
+} from "./types";
+import type {
+  CairoBigInt,
+  CairoBool,
+  CairoByteArray,
+  CairoBytes31,
+  CairoClassHash,
+  CairoContractAddress,
+  CairoEthAddress,
+  CairoFelt,
+  CairoFunction,
+  CairoInt,
+  CairoSecp256k1Point,
+  CairoTuple,
+  CairoU256,
+  CairoVoid,
+} from "abi-wan-kanabi/kanabi";
+import {
+  Account,
+  cairo,
+  CairoCustomEnum,
+  CairoOption,
+  CairoOptionVariant,
+  CairoResult,
+  CairoResultVariant,
+  constants,
+  Contract,
+  extractContractHashes,
+  getChecksumAddress,
+  num,
+  RpcError,
+  RpcProvider,
+  stark,
+  transaction,
+  type CairoAssembly,
+  type Calldata,
+  type CompiledSierra,
+  type DeclareContractPayload,
+  type RawArgs,
+  type SierraEntryPointsByType,
+  type SierraProgramDebugInfo,
+  type Uint256,
+  type UniversalDetails,
+} from "starknet";
 import { formatEther, ZeroAddress } from "ethers";
 
 const convertStringInputToBool = (input: string) => {
@@ -112,25 +163,25 @@ const getFieldType = (type: string, abi: Abi): any => {
 export const zeroAddress = ZeroAddress as `0x${string}`;
 
 export function getFunctionsByStateMutability(
-    abi: Abi,
-    stateMutability: AbiStateMutability
+  abi: Abi,
+  stateMutability: AbiStateMutability,
 ): AbiFunction[] {
-    return abi
-        .reduce((acc, part) => {
-            if (part.type === "function") {
-                acc.push(part);
-            } else if (part.type === "interface" && Array.isArray(part.items)) {
-                part.items.forEach((item) => {
-                    if (item.type === "function") {
-                        acc.push(item);
-                    }
-                })
-            }
-            return acc;
-        }, [] as AbiFunction[])
-        .filter((func) => {
-            return (func.state_mutability === stateMutability)
-        })
+  return abi
+    .reduce((acc, part) => {
+      if (part.type === "function") {
+        acc.push(part);
+      } else if (part.type === "interface" && Array.isArray(part.items)) {
+        part.items.forEach((item) => {
+          if (item.type === "function") {
+            acc.push(item);
+          }
+        });
+      }
+      return acc;
+    }, [] as AbiFunction[])
+    .filter((func) => {
+      return func.state_mutability === stateMutability;
+    });
 }
 
 export const getInitialTupleFormState = (abiParameter: AbiStruct | AbiEnum) => {
@@ -150,21 +201,25 @@ export const getInitialTupleFormState = (abiParameter: AbiStruct | AbiEnum) => {
   return initialForm;
 };
 
-export function getFunctionInputKey(functionName: string, input: AbiParameter, index?: number): string {
-    const name = input.name || `input_${index}_`;
-    return `${functionName}_${name}_${input.type}`;
+export function getFunctionInputKey(
+  functionName: string,
+  input: AbiParameter,
+  index?: number,
+): string {
+  const name = input.name || `input_${index}_`;
+  return `${functionName}_${name}_${input.type}`;
 }
 
 export function getInitialFormState(abiFunction: AbiFunction | AbiConstructor) {
-    const initialForm: Record<string, any> = {};
-    if (!abiFunction.inputs) return initialForm;
+  const initialForm: Record<string, any> = {};
+  if (!abiFunction.inputs) return initialForm;
 
-    abiFunction.inputs.forEach((input, index) => {
-        const key = getFunctionInputKey(abiFunction.name, input, index);
-        initialForm[key] = "";
-    });
+  abiFunction.inputs.forEach((input, index) => {
+    const key = getFunctionInputKey(abiFunction.name, input, index);
+    initialForm[key] = "";
+  });
 
-    return initialForm;
+  return initialForm;
 }
 
 // export function getInitialConstructorFormState(abiConstructor: AbiConstructor) {
@@ -330,16 +385,18 @@ export const getArgsAsStringInputFromForm = (form: Record<string, any>) => {
 };
 
 function adjustInput(value: AbiParameter): AbiParameter {
-    return {
-        ...value
-    }
+  return {
+    ...value,
+  };
 }
 
 export function transformAbiFunction(abiFunction: AbiFunction): AbiFunction {
-    return {
-        ...abiFunction,
-        inputs: abiFunction.inputs.map((value) => adjustInput(value as AbiParameter))
-    }
+  return {
+    ...abiFunction,
+    inputs: abiFunction.inputs.map((value) =>
+      adjustInput(value as AbiParameter),
+    ),
+  };
 }
 
 export function addError(
@@ -528,7 +585,6 @@ const fitsWithinBitCount = (
 // Treat any dot-separated string as a potential ENS name
 const ensRegex = /.+\..+/;
 export const isENS = (address = "") => ensRegex.test(address);
-
 
 export function parseGenericType(typeString: string): string[] | string {
   const match = typeString.match(/<([^>]*(?:<(?:[^<>]*|<[^>]*>)*>[^>]*)*)>/);
@@ -866,10 +922,14 @@ export const decodeContractResponse = ({
     .map((type) => getFieldType(type, abi));
   let arrResp = [resp];
   if (!abiTypes.length || arrResp.length !== abiTypes.length) {
-    return JSON.stringify(resp, (_key: string, value: unknown) => {
+    return JSON.stringify(
+      resp,
+      (_key: string, value: unknown) => {
         if (typeof value === "bigint") return value.toString();
         return value;
-    }, 2);
+      },
+      2,
+    );
   }
   const decoded: any[] = [];
   for (let index = 0; index < arrResp.length; index++) {
@@ -888,33 +948,38 @@ export const decodeContractResponse = ({
     return typeof decodedResult === "string"
       ? decodedResult
       : JSON.stringify(decodedResult, (_key: string, value: unknown) => {
-        if (typeof value === "bigint") return value.toString();
-        return value;
-      });
+          if (typeof value === "bigint") return value.toString();
+          return value;
+        });
   }
   return decodedResult;
 };
 
 export function getConstructorWithArgs(abi: Abi): {
-  constructor: AbiConstructor,
-  constructorArgs: readonly AbiParameter[]
+  constructor: AbiConstructor;
+  constructorArgs: readonly AbiParameter[];
 } {
   const constructor = abi.find((part) => part.type === "constructor");
   if (!constructor) return {} as any;
 
   const constructorArgs = constructor.inputs;
   return {
-    constructor, constructorArgs
-  }
+    constructor,
+    constructorArgs,
+  };
 }
 
-export function getCompiledSierra (contractData: ContractArtifact): CompiledSierra {
+export function getCompiledSierra(
+  contractData: ContractArtifact,
+): CompiledSierra {
   return {
     sierra_program: contractData.sierraProgram,
-    sierra_program_debug_info: contractData.sierraProgramDebugInfo as SierraProgramDebugInfo,
+    sierra_program_debug_info:
+      contractData.sierraProgramDebugInfo as SierraProgramDebugInfo,
     contract_class_version: contractData.contractClassVersion,
-    entry_points_by_type: contractData.entryPointsByType as SierraEntryPointsByType,
-    abi: contractData.abi
+    entry_points_by_type:
+      contractData.entryPointsByType as SierraEntryPointsByType,
+    abi: contractData.abi,
   };
 }
 
@@ -929,9 +994,9 @@ const declareIfNot_NotWait = async (
   try {
     await provider.getClassByHash(classHash);
     console.log(
-    "Skipping declare - class hash",
+      "Skipping declare - class hash",
       classHash,
-      "already exists on-chain."
+      "already exists on-chain.",
     );
 
     return {
@@ -942,7 +1007,7 @@ const declareIfNot_NotWait = async (
       console.log(
         "Class hash",
         classHash,
-        "not found, proceeding with declaration..."
+        "not found, proceeding with declaration...",
       );
     } else {
       console.error("Error while checking classHash", classHash);
@@ -992,7 +1057,7 @@ const declareIfNot_NotWait = async (
       console.error(
         "Class declaration failed: deployer",
         account.address,
-        "has insufficient balance."
+        "has insufficient balance.",
       );
       throw "Class declaration failed: insufficient balance";
     }
@@ -1003,16 +1068,16 @@ const declareIfNot_NotWait = async (
   }
 };
 
-const deployContract_NotWait = async (payload: {
-  salt: string;
-  classHash: string;
-  constructorCalldata: RawArgs;
-}, account: Account) => {
+const deployContract_NotWait = async (
+  payload: {
+    salt: string;
+    classHash: string;
+    constructorCalldata: RawArgs;
+  },
+  account: Account,
+) => {
   try {
-    const { addresses } = transaction.buildUDCCall(
-      payload,
-      account.address
-    );
+    const { addresses } = transaction.buildUDCCall(payload, account.address);
     // deployCalls.push(...calls);
     return {
       contractAddress: addresses[0],
@@ -1024,21 +1089,21 @@ const deployContract_NotWait = async (payload: {
 };
 
 type DeployContractParams = {
-    contract: string;
-    contractName?: string;
-    constructorArgs?: RawArgs;
-    options?: UniversalDetails;
-}
+  contract: string;
+  contractName?: string;
+  constructorArgs?: RawArgs;
+  options?: UniversalDetails;
+};
 
 export const scaffoldDeployContract = async (
-  params: DeployContractParams, 
-  compiledContractCasm: CairoAssembly, 
+  params: DeployContractParams,
+  compiledContractCasm: CairoAssembly,
   // compiledContractSierra: CompiledSierra,
   contractData: ContractArtifact,
   providerUrl: string,
   accountAddress: string,
   privateKey: string,
-  constructorCalldata: Calldata
+  constructorCalldata: Calldata,
 ): Promise<{
   classHash: string;
   address: string;
@@ -1050,10 +1115,16 @@ export const scaffoldDeployContract = async (
 
   const provider = new RpcProvider({ nodeUrl: providerUrl });
   if (!provider) {
-    throw new Error('Invalid RPC Provider')
+    throw new Error("Invalid RPC Provider");
   }
 
-  const account = new Account(provider, accountAddress, privateKey, "1", constants.TRANSACTION_VERSION.V3);
+  const account = new Account(
+    provider,
+    accountAddress,
+    privateKey,
+    "1",
+    constants.TRANSACTION_VERSION.V3,
+  );
 
   const abi = compiledContractSierra.abi;
   const constructorAbi = abi.find((item: any) => item.type === "constructor");
@@ -1061,12 +1132,12 @@ export const scaffoldDeployContract = async (
     const requiredArgs = constructorAbi.inputs || [];
     if (!constructorArgs) {
       throw new Error(
-          `Missing constructor arguments: expected ${
-            requiredArgs.length
-          } (${requiredArgs
-            .map((a: any) => `${a.name}: ${a.type}`)
-            .join(", ")}), but got none.`
-        );
+        `Missing constructor arguments: expected ${
+          requiredArgs.length
+        } (${requiredArgs
+          .map((a: any) => `${a.name}: ${a.type}`)
+          .join(", ")}), but got none.`,
+      );
     }
 
     for (const arg of requiredArgs) {
@@ -1080,7 +1151,7 @@ export const scaffoldDeployContract = async (
         constructorArgs[arg.name] === ""
       ) {
         throw new Error(
-            `Missing value for constructor argument '${arg.name}' of type '${arg.type}'.`
+          `Missing value for constructor argument '${arg.name}' of type '${arg.type}'.`,
         );
       }
     }
@@ -1110,16 +1181,19 @@ export const scaffoldDeployContract = async (
     },
     provider,
     account,
-    options
+    options,
   );
 
   let randomSalt = stark.randomAddress();
 
-  let { contractAddress } = await deployContract_NotWait({
-    salt: randomSalt,
-    classHash,
-    constructorCalldata,
-  }, account);
+  let { contractAddress } = await deployContract_NotWait(
+    {
+      salt: randomSalt,
+      classHash,
+      constructorCalldata,
+    },
+    account,
+  );
 
   console.log("Contract Deployed at ", contractAddress);
 
@@ -1132,13 +1206,15 @@ export const scaffoldDeployContract = async (
   // };
 
   const deployedContract = new Contract(
-    compiledContractSierra.abi, contractAddress, provider
-  )
+    compiledContractSierra.abi,
+    contractAddress,
+    provider,
+  );
 
   return {
     classHash: classHash,
     address: contractAddress,
-    contract: deployedContract
+    contract: deployedContract,
   };
 };
 
@@ -1147,60 +1223,62 @@ export async function deployContract(
   providerUrl: string,
   accountAddress: string,
   privateKey: string,
-  constructorCalldata: Calldata
+  constructorCalldata: Calldata,
 ): Promise<{
-  contract: Contract,
-  classHash: string
+  contract: Contract;
+  classHash: string;
 }> {
-
   try {
-    const compiledSierra = getCompiledSierra(contractData)
+    const compiledSierra = getCompiledSierra(contractData);
     console.log("Compiled sierra available");
     const provider = new RpcProvider({ nodeUrl: providerUrl });
     console.log("rpc url available");
     const account = new Account(
-      provider, 
-      accountAddress, 
+      provider,
+      accountAddress,
       privateKey,
       "1",
-      constants.TRANSACTION_VERSION.V3
+      constants.TRANSACTION_VERSION.V3,
     );
     console.log("account available");
 
     const salt = Math.floor(Math.random() * 1000000).toString();
 
-    const { contract: _extractedContract, classHash, compiledClassHash, casm } = extractContractHashes({
+    const {
+      contract: _extractedContract,
+      classHash,
+      compiledClassHash,
+      casm,
+    } = extractContractHashes({
       contract: compiledSierra,
-      casm: contractData.compiledCasm
+      casm: contractData.compiledCasm,
     });
 
     if (!classHash || !classHash || !compiledClassHash || !casm) {
       throw new Error("Failed to extract contract Hashes");
     }
 
-    console.log("Successfully computed contract hashes")
+    console.log("Successfully computed contract hashes");
 
-    const { declare, deploy } = await account.declareAndDeploy(
-      {
-        classHash,
-        constructorCalldata: constructorCalldata ? constructorCalldata : undefined,
-        salt,
-        contract: compiledSierra,
-        compiledClassHash,
-        casm: contractData.compiledCasm
-      }
-    );
+    const { declare, deploy } = await account.declareAndDeploy({
+      classHash,
+      constructorCalldata: constructorCalldata
+        ? constructorCalldata
+        : undefined,
+      salt,
+      contract: compiledSierra,
+      compiledClassHash,
+      casm: contractData.compiledCasm,
+    });
 
-    const contract = new Contract(
-      compiledSierra.abi, deploy.address, provider
-    )
+    const contract = new Contract(compiledSierra.abi, deploy.address, provider);
 
     console.log(declare.transaction_hash);
     console.log(deploy.transaction_hash);
 
     return {
       contract,
-      classHash
+      classHash,
     };
   } catch (err) {
     console.error("Error deploying contract: ", (err as Error).message);

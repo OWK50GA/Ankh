@@ -13,7 +13,13 @@
 
 import type { Abi } from "abi-wan-kanabi";
 import type { AbiParameter, FormErrorMessageState } from "../../types";
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import ContractInput from "../ContractInput";
 import { parseGenericType } from "../../utils";
 
@@ -42,7 +48,6 @@ export const ArrayInput = ({
   const [arrLength, setArrLength] = useState<number>(-1);
   console.log("ArrayInput mount:", parentStateObjectKey, parentForm);
 
-
   const elementType = useMemo(() => {
     const parsed = parseGenericType(abiParameter.type);
     return Array.isArray(parsed) ? parsed[0] : parsed;
@@ -58,10 +63,12 @@ export const ArrayInput = ({
       ),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(inputArr, (_key: string, value: unknown) => {
-    if (typeof value === "bigint") return value.toString();
-    return value;
-  })]);
+  }, [
+    JSON.stringify(inputArr, (_key: string, value: unknown) => {
+      if (typeof value === "bigint") return value.toString();
+      return value;
+    }),
+  ]);
 
   // useEffect(() => {
   //   const existing = parentForm?.[parentStateObjectKey];
@@ -168,8 +175,7 @@ export const ArrayInput = ({
               }}
               className="bg-blue-500 shadow-none text-white rounded-md px-3 py-1"
             >
-              {/* + Add (push) */}
-              +
+              {/* + Add (push) */}+
             </button>
             <button
               className="bg-blue-500 shadow-none text-white rounded-md px-3 py-1"
@@ -182,8 +188,7 @@ export const ArrayInput = ({
                 }
               }}
             >
-              {/* - Remove (pop) */}
-              -
+              {/* - Remove (pop) */}-
             </button>
           </div>
         </div>
