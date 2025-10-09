@@ -33,7 +33,8 @@
   --vscode-button-secondaryHoverBackground: #3c3c3c;
   --vscode-textCodeBlock-background: #0a0a0a;
   --vscode-font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  --vscode-editor-font-family: 'SF Mono', Monaco, 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
+  --vscode-editor-font-family:
+    "SF Mono", Monaco, "Inconsolata", "Roboto Mono", "Courier New", monospace;
 }
 
 body {

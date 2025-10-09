@@ -8,7 +8,7 @@ Ankh brings the power of Starknet development directly into your VS Code workspa
 
 ### Smart Contract Management
 
-- Automatic Discovery: Automatically scans your workspace for compiled Cairo contracts (target/dev/*.contract_class.json)
+- Automatic Discovery: Automatically scans your workspace for compiled Cairo contracts (target/dev/\*.contract_class.json)
 - Tree View Interface: Organized view of all contracts in your project with dedicated sections for local and deployed contracts
 - Multi-Contract Support: Work with multiple contracts simultaneously, each in its own persistent tab
 
@@ -21,14 +21,14 @@ Ankh brings the power of Starknet development directly into your VS Code workspa
 
 ### Developer Experience
 
-- Remix-like Interface: Familiar UI similar to Remix IDE with modern VS Code theming
+- Intuitive Interface: Familiar UI similar to API Clients with modern VS Code theming
 - Persistent State: Contract deployment info and logs persist across VS Code sessions
 - Environment Integration: Automatically loads account credentials from .env files
 - Monorepo Support: Configure custom workspace roots for projects within larger repositories
 
 ### Advanced Capabilities
 
-- Multiple Network Support: Works with Sepolia testnet, mainnet, and local devnets
+<!-- - Multiple Network Support: Works with Sepolia testnet, mainnet, and local devnets -->
 - ABI-Based Interface: Dynamically generates function interfaces from contract ABIs
 - Input Validation: Smart input handling for different Cairo data types
 - State Management: Remembers deployment information and interaction history
@@ -40,7 +40,6 @@ For example if there is an image subfolder under your extension project workspac
 <!-- \!\[feature X\]\(images/feature-x.png\)
 
 > Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow. -->
-
 
 ### Installation
 
@@ -68,6 +67,7 @@ RPC_URL_SEPOLIA=https://starknet-sepolia.public.blastapi.io/rpc/v0_8
 ```
 
 - In your scarb.toml in your root contracts folder, set the line:
+
 ```
 [[target.starknet-contract]]
 sierra = true
@@ -75,6 +75,7 @@ casm = true
 ```
 
 ### Basic Usage
+
 - View Contracts: Compiled contracts appear automatically in the Ankh tree view
 <!-- \!\[Contracts Tree View\]\(./assets/ankh-tree-view.png\) -->
 - Open Interface: Click any contract to open its interaction interface
@@ -89,6 +90,7 @@ casm = true
 ### Workspace Root Selection
 
 For monorepos where cairo contracts are not in the root workspace root:
+
 - Click "Configure Cairo workspace root" in the tree view
 - Select the directory containing your Cairo project
 - Ankh will remember this setting per workspace
@@ -100,14 +102,15 @@ For monorepos where cairo contracts are not in the root workspace root:
 - Switch between panels using VS Code's tab system
 
 ## Commands
-Access these commands via the Command Palette (```Ctrl+Shift+P```):
 
-- ```Ankh: Refresh Contracts``` - Rescan workspace for contracts
-- ```Ankh: Select Cairo Workspace Root``` - Configure custom project root
-- ```Ankh: Clear Cairo Workspace Root``` - Reset to default workspace scanning
-- ```Ankh: Show Current Workspace Root``` - Display current configuration
-- ```Ankh: Close All Contract Panels``` - Close all open contract interfaces
-- ```Ankh: Show Active Panels``` - List currently open contract panels
+Access these commands via the Command Palette (`Ctrl+Shift+P`):
+
+- `Ankh: Refresh Contracts` - Rescan workspace for contracts
+- `Ankh: Select Cairo Workspace Root` - Configure custom project root
+- `Ankh: Clear Cairo Workspace Root` - Reset to default workspace scanning
+- `Ankh: Show Current Workspace Root` - Display current configuration
+- `Ankh: Close All Contract Panels` - Close all open contract interfaces
+- `Ankh: Show Active Panels` - List currently open contract panels
 
 ## Interface Overview
 
@@ -122,7 +125,7 @@ Access these commands via the Command Palette (```Ctrl+Shift+P```):
 
 ### Function Interaction
 
-Constructor CallData can be set once the panel is opened, before clicking deploy. 
+Constructor CallData can be set once the panel is opened, before clicking deploy.
 If there is an already deployed version of the contract, interact with it by simply putting the contract address in the right input field, and clicking on Load Contract
 View functions and Write functions are displayed on separate tabs.
 
@@ -141,6 +144,7 @@ Network configuration is handled through environment variables.
 - Compiled contracts in target/dev/ directory
 
 ## Extension Settings
+
 Ankh stores workspace-specific settings including:
 
 - Custom workspace root paths
@@ -169,6 +173,7 @@ All settings are automatically saved and restored per workspace.
 - Verify React build completed successfully
 
 ### Contributing
+
 Issues and feature requests are welcome. This extension is built with:
 
 - TypeScript for VS Code extension logic
@@ -179,10 +184,11 @@ Issues and feature requests are welcome. This extension is built with:
 ## Support
 
 You can do one of the following
+
 <!-- - Watch {YouTube video link} for demonstration -->
+
 - Reach the Publisher at wilfridokorie@gmail.com
 - Raise an issue at https://github.com/OWK50GA/Ankh/issues
-
 
 License
 MIT

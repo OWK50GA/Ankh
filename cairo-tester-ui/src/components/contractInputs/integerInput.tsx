@@ -9,7 +9,6 @@ import { InputBase } from "./inputBase";
 //   isValidInteger,
 // } from "~~/components/scaffold-stark";
 
-
 type IntegerInputProps = CommonInputProps<string | bigint> & {
   variant?: string;
   disableMultiplyBy1e18?: boolean;

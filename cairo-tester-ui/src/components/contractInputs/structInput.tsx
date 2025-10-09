@@ -1,7 +1,11 @@
 import type { Abi } from "abi-wan-kanabi";
 import type { AbiEnum, AbiStruct, FormErrorMessageState } from "../../types";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { getFunctionInputKey, getInitialTupleFormState, isCairoOption } from "../../utils";
+import {
+  getFunctionInputKey,
+  getInitialTupleFormState,
+  isCairoOption,
+} from "../../utils";
 import ContractInput from "../ContractInput";
 
 type StructProps = {
@@ -60,23 +64,30 @@ export const Struct = ({
         abiMember.type === "struct" ? argsStruct : { variant: argsStruct },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [abiMember, JSON.stringify(form, (_key: string, value: unknown) => {
-    if (typeof value === "bigint") return value.toString();
-    return value;
-  }), activeVariantIndex]);
+  }, [
+    abiMember,
+    JSON.stringify(form, (_key: string, value: unknown) => {
+      if (typeof value === "bigint") return value.toString();
+      return value;
+    }),
+    activeVariantIndex,
+  ]);
 
-  console.log("Struct received abiMember:", abiMember, "for key", parentStateObjectKey);
+  console.log(
+    "Struct received abiMember:",
+    abiMember,
+    "for key",
+    parentStateObjectKey,
+  );
 
-  if (!abiMember){
-    console.log('Abi member not found')
+  if (!abiMember) {
+    console.log("Abi member not found");
     return null;
-  };
+  }
 
   return (
     <div>
-      <div
-        className={`pl-4 pt-1.5`}
-      >
+      <div className={`pl-4 pt-1.5`}>
         {/* {!isDisabled && <input type="checkbox" className="min-h-fit peer" />} */}
         <div
           className={`p-0 min-h-fit peer-checked:mb-2 text-primary-content/50 ${

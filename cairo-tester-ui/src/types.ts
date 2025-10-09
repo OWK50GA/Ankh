@@ -4,40 +4,40 @@ import type { Abi } from "abi-wan-kanabi";
 import type { CairoAssembly } from "starknet";
 
 export type ContractFunctionData = {
-    abi: Abi;
-    classHash?: string;
-    contractAddress?: `0x${string}`;
-}
+  abi: Abi;
+  classHash?: string;
+  contractAddress?: `0x${string}`;
+};
 
 export type VSCodeAPI = {
-    postMessage: (message: any) => void;
-    getState: () => any;
-    setState: (state: any) => void;
-}
+  postMessage: (message: any) => void;
+  getState: () => any;
+  setState: (state: any) => void;
+};
 
 declare global {
-    interface Window {
-        vscode: VSCodeAPI;
-    }
+  interface Window {
+    vscode: VSCodeAPI;
+  }
 }
 
 export type ContractArtifact = {
-    abi: Abi;
-    classHash?: string;
-    contractAddress?: string;
-    sierraProgram: string[];
-    sierraProgramDebugInfo: Record<string, any>;
-    contractClassVersion: string;
-    entryPointsByType: Record<string, any>;
-    name: string;
-    compiledCasm: CairoAssembly
-}
+  abi: Abi;
+  classHash?: string;
+  contractAddress?: string;
+  sierraProgram: string[];
+  sierraProgramDebugInfo: Record<string, any>;
+  contractClassVersion: string;
+  entryPointsByType: Record<string, any>;
+  name: string;
+  compiledCasm: CairoAssembly;
+};
 
 export type AccountInfo = {
-    privateKey: string;
-    walletAddress: string;
-    rpcUrl: string;
-}
+  privateKey: string;
+  walletAddress: string;
+  rpcUrl: string;
+};
 
 /* Abi-related issh from abi-wan-kanabi */
 
@@ -93,8 +93,8 @@ export type AbiEnum = {
 // Abi shit over
 
 export type FormErrorMessageState = {
-    [x: string]: string;
-}
+  [x: string]: string;
+};
 
 export type CommonInputProps<T = string> = {
   value: T;
