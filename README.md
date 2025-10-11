@@ -29,6 +29,7 @@ Ankh brings the power of Starknet development directly into your VS Code workspa
 ### Advanced Capabilities
 
 <!-- - Multiple Network Support: Works with Sepolia testnet, mainnet, and local devnets -->
+
 - ABI-Based Interface: Dynamically generates function interfaces from contract ABIs
 - Input Validation: Smart input handling for different Cairo data types
 - State Management: Remembers deployment information and interaction history
@@ -156,8 +157,8 @@ All settings are automatically saved and restored per workspace.
 
 ### No Contracts Found
 
-- Ensure contracts are compiled with ```scarb build```
-- Check that ```.contract_class.json``` and ```.compiled_contract_class.json``` files exist in ```target/dev/```
+- Ensure contracts are compiled with `scarb build`
+- Check that `.contract_class.json` and `.compiled_contract_class.json` files exist in `target/dev/`
 - Use "Configure Cairo workspace root" for monorepos
 
 ### Connection Issues

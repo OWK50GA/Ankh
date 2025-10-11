@@ -2,9 +2,9 @@
   "name": "ankh",
   "displayName": "Ankh",
   "description": "an extension used to test your cairo code right away",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "wilfridokorie",
-  "icon": "assets/ankh_icon.png",
+  "icon": "assets/ankh_logo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/OWK50GA/Ankh.git"
@@ -35,20 +35,8 @@
     },
     "commands": [
       {
-        "command": "ankh.helloWorld",
-        "title": "Hello World"
-      },
-      {
         "command": "ankh.refreshContracts",
         "title": "Refresh Contracts"
-      },
-      {
-        "command": "ankh.deployContract",
-        "title": "Deploy Contracts"
-      },
-      {
-        "command": "ankh.interactWithContract",
-        "title": "Interact With Contracts"
       },
       {
         "command": "ankh.openContract",
