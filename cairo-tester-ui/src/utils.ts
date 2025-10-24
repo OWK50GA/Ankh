@@ -689,6 +689,7 @@ const _decodeContractResponseItem = (
   abi: Abi,
   showAsString?: boolean,
 ): any => {
+  console.log("Response item: ", respItem)
   if (respItem === undefined) {
     return "";
   }
@@ -722,7 +723,7 @@ const _decodeContractResponseItem = (
   }
 
   if (abiType.type && abiType.type === "core::bool") {
-    return respItem;
+    return respItem.toString();
   }
 
   if (abiType.type && abiType.type === "core::byte_array::ByteArray") {
@@ -757,15 +758,17 @@ const _decodeContractResponseItem = (
 
       const decodedArr: any[] = tupleTypes.map(
         (type: string, index: number) => {
+          console.log(respItem[index])
           return _decodeContractResponseItem(
-            respItem[index],
+            (respItem[index]),
             getFieldType(type, abi),
             abi,
           );
         },
       );
 
-      return `(${decodedArr.join(",")})`;
+      // return `(${decodedArr.join(",")})`;
+      return decodedArr
     } catch (error) {
       console.error("Error processing tuple:", error);
       return String(respItem);
@@ -954,6 +957,32 @@ export const decodeContractResponse = ({
   }
   return decodedResult;
 };
+
+export const formatResult = (result: any): string => {
+    if (result === null || result === undefined) {
+      return 'null';
+    }
+    
+    if (typeof result === 'string') {
+      return result;
+    }
+    
+    if (typeof result === 'number' || typeof result === 'boolean') {
+      return String(result);
+    }
+    
+    try {
+      return JSON.stringify(result, (_key: any, value: unknown) => {
+        if (typeof value === 'bigint') {
+          return value.toString();
+        }
+        return value;
+      }, 2);
+    } catch (error) {
+      console.error('Error stringifying result:', error);
+      return String(result);
+    }
+  };
 
 export function getConstructorWithArgs(abi: Abi): {
   constructor: AbiConstructor;

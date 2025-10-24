@@ -1,5 +1,6 @@
 import { Loader2 } from "lucide-react";
 import { CopyButton } from "./CopyButton";
+import { formatResult } from "../utils";
 
 export const ResponseSection = ({
   response,
@@ -54,9 +55,17 @@ export const ResponseSection = ({
           <h4 className="text-sm font-medium text-gray-400 mb-2">Result</h4>
           <div className="bg-[#1E1E1E] rounded-lg p-4 font-mono text-sm">
             <pre className="whitespace-pre-wrap break-words text-gray-300">
-              {typeof response.result === "object"
-                ? JSON.stringify(response.result, null, 2)
-                : String(response.result)}
+              {/* {typeof response.result === "object"
+                ? JSON.stringify(
+                    response.result,
+                    (_key: string, value: unknown) => {
+                      if (typeof value === "bigint") return value.toString();
+                      return value;
+                    },
+                    2,
+                  )
+                : String(response.result)} */}
+                {formatResult(response.result)}
             </pre>
           </div>
         </div>
