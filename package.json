@@ -2,7 +2,7 @@
   "name": "ankh",
   "displayName": "Ankh",
   "description": "an extension used to test your cairo code right away",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "publisher": "wilfridokorie",
   "icon": "assets/ankh_logo.png",
   "repository": {
