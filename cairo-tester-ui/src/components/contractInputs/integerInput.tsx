@@ -13,6 +13,7 @@ type IntegerInputProps = CommonInputProps<string | bigint> & {
   variant?: string;
   disableMultiplyBy1e18?: boolean;
   onError?: (message: string | null) => void;
+  stateMutability: "view" | "external"
 };
 
 export const IntegerInput = ({
@@ -22,6 +23,7 @@ export const IntegerInput = ({
   placeholder,
   disabled,
   variant = "core::integer::u256",
+  stateMutability,
   // disableMultiplyBy1e18 = false,
   onError,
 }: IntegerInputProps) => {
@@ -53,6 +55,7 @@ export const IntegerInput = ({
       error={inputError}
       onChange={onChange}
       disabled={disabled}
+      stateMutability={stateMutability}
       // suffix={
       //   !inputError &&
       //   !disabled &&

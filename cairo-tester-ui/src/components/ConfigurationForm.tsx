@@ -98,6 +98,7 @@ export default function ConfigurationForm({
         stateObjectKey={key}
         paramType={input}
         setFormErrorMessage={setFormErrorMessage}
+        stateMutability="view"
       />
     );
   });

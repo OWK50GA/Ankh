@@ -16,6 +16,7 @@ type StructProps = {
   abiMember?: AbiStruct | AbiEnum;
   setFormErrorMessage: Dispatch<SetStateAction<FormErrorMessageState>>;
   isDisabled?: boolean;
+  stateMutability: "view" | "external"
 };
 
 export const Struct = ({
@@ -26,6 +27,7 @@ export const Struct = ({
   abi,
   setFormErrorMessage,
   isDisabled = false,
+  stateMutability
 }: StructProps) => {
   const [form, setForm] = useState<Record<string, any>>(() =>
     getInitialTupleFormState(
@@ -113,6 +115,7 @@ export const Struct = ({
                     key={index}
                     stateObjectKey={key}
                     paramType={{ name: member.name, type: member.type }}
+                    stateMutability={stateMutability}
                   />
                 );
               })
@@ -152,6 +155,7 @@ export const Struct = ({
                         (isCairoOption(abiMember.name) &&
                           variant.name === "None")
                       }
+                      stateMutability={stateMutability}
                     />
                   </div>
                 );

@@ -28,6 +28,7 @@ export default function ContractInput({
   paramType,
   setFormErrorMessage,
   isDisabled,
+  stateMutability
 }: {
   abi?: Abi;
   setForm: Dispatch<SetStateAction<Record<string, any>>>;
@@ -36,6 +37,7 @@ export default function ContractInput({
   paramType: AbiParameter;
   setFormErrorMessage: Dispatch<SetStateAction<FormErrorMessageState>>;
   isDisabled?: boolean;
+  stateMutability: "view" | "external"
 }) {
   const inputProps = {
     name: stateObjectKey,
@@ -63,10 +65,11 @@ export default function ContractInput({
           setParentForm={setForm}
           setFormErrorMessage={setFormErrorMessage}
           isDisabled={isDisabled}
+          stateMutability={stateMutability}
         />
       );
     } else if (isCairoTuple(paramType.type)) {
-      return <InputBase {...inputProps} disabled={isDisabled} />;
+      return <InputBase {...inputProps} disabled={isDisabled} stateMutability={stateMutability}/>;
     } else if (
       isCairoInt(paramType.type) ||
       isCairoBigInt(paramType.type) ||
@@ -75,6 +78,7 @@ export default function ContractInput({
       return (
         <IntegerInput
           {...inputProps}
+          stateMutability={stateMutability}
           variant={paramType.type}
           disabled={isDisabled}
           onError={(errMessage: string | null) =>
@@ -94,7 +98,7 @@ export default function ContractInput({
       if (isCairoVoid(paramType.type)) {
         return <></>;
       }
-      return <InputBase {...inputProps} disabled={isDisabled} />;
+      return <InputBase {...inputProps} disabled={isDisabled} stateMutability={stateMutability} />;
     } else {
       return (
         <Struct

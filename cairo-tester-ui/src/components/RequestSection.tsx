@@ -304,6 +304,7 @@ export const RequestSection = ({
                 )}
                 paramType={input}
                 setFormErrorMessage={setFormErrorMessage}
+                stateMutability={selectedFunction.state_mutability}
               />
             ))}
           </div>
@@ -314,7 +315,7 @@ export const RequestSection = ({
         <button
           onClick={handleExecute}
           disabled={!readyForInteraction || isLoading}
-          className="bg-gradient-to-r from-[#9433DC] to-[#D57B52] px-6 py-2.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center gap-2"
+          className={`${isView ? 'bg-blue-600' : 'bg-orange-500'} px-6 py-2.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center gap-2 text-white`}
         >
           {isLoading && <Loader2 size={16} className="animate-spin" />}
           {isLoading

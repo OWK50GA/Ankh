@@ -12,6 +12,7 @@ type InputBaseProps<T> = CommonInputProps<T> & {
   prefix?: ReactNode;
   suffix?: ReactNode;
   reFocus?: boolean;
+  stateMutability: "view" | "external"
 };
 
 export const InputBase = <
@@ -26,6 +27,7 @@ export const InputBase = <
   prefix,
   suffix,
   reFocus,
+  stateMutability
 }: InputBaseProps<T>) => {
   const inputReft = useRef<HTMLInputElement>(null);
 
@@ -61,7 +63,7 @@ export const InputBase = <
   return (
     <div className={`flex bg-input text-accent ${modifier}`}>
       {prefix}
-      <div className="relative rounded-md p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] w-full">
+      <div className={`relative rounded-md p-[1px] ${stateMutability === "view" ? 'focus-within:bg-blue-600': 'focus-within:bg-orange-400'} w-full`}>
         <input
           className="focus-within:border-transparent focus-within:outline-none bg-[#1E1E1E] h-[2.2rem] min-h-[2.2rem] px-4 border border-gray-600 w-full text-xs placeholder:text-[#9596BF] text-neutral rounded-md"
           placeholder={placeholder}

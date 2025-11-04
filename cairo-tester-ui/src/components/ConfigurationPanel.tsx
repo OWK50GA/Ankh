@@ -45,7 +45,7 @@ export const ConfigurationPanel = ({
       {/* Header */}
       <div className="bg-[#1E1E1E] border-b border-gray-700 p-4 flex items-center justify-between">
         <h3 className="font-medium flex items-center gap-2">
-          <Settings size={18} className="text-[#9433DC]" />
+          <Settings size={18} className="text-blue-600" />
           Contract Setup
         </h3>
         <button
@@ -104,7 +104,7 @@ export const ConfigurationPanel = ({
           >
             🚀 Deploy New
             {activeTab === "deploy" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#9433DC] to-[#D57B52]"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
             )}
           </button>
           <button
@@ -117,7 +117,7 @@ export const ConfigurationPanel = ({
           >
             📦 Load Existing
             {activeTab === "load" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#9433DC] to-[#D57B52]"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
             )}
           </button>
         </div>
@@ -133,7 +133,7 @@ export const ConfigurationPanel = ({
             </div>
             <div className="flex justify-end">
               <button
-                className="bg-gradient-to-r from-[#9433DC] to-[#D57B52] px-6 py-2.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                className="bg-blue-600 px-6 py-2.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-opacity text-white"
                 onClick={handleDeploy}
                 disabled={deploying}
               >
@@ -149,7 +149,7 @@ export const ConfigurationPanel = ({
                   Contract Address
                 </label>
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center rounded-md relative p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] flex-1">
+                  <div className="flex items-center justify-center rounded-md relative p-[1px] focus-within:bg-blue-600 flex-1">
                     <input
                       type="text"
                       value={formInputValues.contractAddress || ""}
@@ -175,7 +175,7 @@ export const ConfigurationPanel = ({
                   <span className="text-xs text-gray-500">(optional)</span>
                 </label>
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center rounded-md relative p-[1px] focus-within:bg-gradient-to-r focus-within:from-[#9433DC] focus-within:to-[#D57B52] flex-1">
+                  <div className="flex items-center justify-center rounded-md relative p-[1px] focus-within:bg-blue-600 flex-1">
                     <input
                       type="text"
                       value={formInputValues.classHash || ""}
@@ -198,7 +198,7 @@ export const ConfigurationPanel = ({
 
             <div className="flex justify-end gap-2">
               <button
-                className="bg-gradient-to-r from-[#9433DC] to-[#D57B52] px-6 py-2.5 rounded-lg font-medium transition-opacity"
+                className="bg-blue-600 px-6 py-2.5 rounded-lg font-medium transition-opacity text-white"
                 onClick={handleLoadContract}
               >
                 Load Contract

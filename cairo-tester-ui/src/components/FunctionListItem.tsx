@@ -17,7 +17,7 @@ export const FunctionListItem = ({
       onClick={onClick}
       className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors flex items-center justify-between group ${
         isSelected
-          ? "bg-gradient-to-r from-[#9433DC] to-[#D57B52] text-white"
+          ? type === "view" ? "bg-blue-300 text-blue-600" : 'bg-orange-200 text-orange-600'
           : "hover:bg-[#2A2A2A] text-gray-300"
       }`}
     >

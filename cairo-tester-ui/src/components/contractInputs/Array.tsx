@@ -32,6 +32,7 @@ type ArrayProps = {
   parentStateObjectKey: string;
   setFormErrorMessage: Dispatch<SetStateAction<FormErrorMessageState>>;
   isDisabled?: boolean;
+  stateMutability: "view" | "external"
 };
 
 export const ArrayInput = ({
@@ -42,6 +43,7 @@ export const ArrayInput = ({
   abiParameter,
   setFormErrorMessage,
   isDisabled,
+  stateMutability
 }: ArrayProps) => {
   // array in object representation
   const [inputArr, setInputArr] = useState<any>({});
@@ -160,6 +162,7 @@ export const ArrayInput = ({
                   } as AbiParameter
                 }
                 setFormErrorMessage={setFormErrorMessage}
+                stateMutability={stateMutability}
               />
             );
           })}
