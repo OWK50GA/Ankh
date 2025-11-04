@@ -11,7 +11,7 @@ import {
 } from "../utils";
 import { useConfig } from "../contexts/cairoTesterContext";
 import toast from "react-hot-toast";
-import { Account, CallData, constants, Contract, RpcProvider } from "starknet";
+import { Account, CallData, Contract, RpcProvider } from "starknet";
 
 export const RequestSection = ({
   selectedFunction,
@@ -144,13 +144,19 @@ export const RequestSection = ({
 
     try {
       setIsLoading(true);
-      const account = new Account(
+      // const account = new Account(
+      //   provider,
+      //   accountInfo.walletAddress,
+      //   accountInfo.privateKey,
+      //   "1",
+      //   constants.TRANSACTION_VERSION.V3,
+      // );
+      const account = new Account({
         provider,
-        accountInfo.walletAddress,
-        accountInfo.privateKey,
-        "1",
-        constants.TRANSACTION_VERSION.V3,
-      );
+        address: accountInfo.walletAddress,
+        signer: accountInfo.privateKey,
+        cairoVersion: "1"
+      })
       const calldata = new CallData(abi).compile(
         `${selectedFunction.name}`,
         inputValues,
@@ -191,7 +197,12 @@ export const RequestSection = ({
     }
 
     const provider = new RpcProvider({ nodeUrl: accountInfo.rpcUrl });
-    const contract = new Contract(abi, contractAddress!, provider);
+    // const contract = new Contract(abi, contractAddress!, provider);
+    const contract = new Contract({
+      abi,
+      address: contractAddress!,
+      providerOrAccount: provider
+    })
     const newInputValue = getArgsAsStringInputFromForm(form);
     const expectedArgCount = selectedFunction.inputs.length;
 
