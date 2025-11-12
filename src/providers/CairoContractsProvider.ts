@@ -1,13 +1,14 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
+import { CompiledSierra, Contract, RpcProvider } from "starknet";
 
 export interface ContractArtifact {
   abi: any[];
   classHash?: string;
   contractAddress?: string;
   sierraProgram: string[];
-  sierraProgramDebugInfo: Record<string, any>;
+  sierraProgramDebugInfo?: Record<string, any>;
   contractClassVersion: string;
   entryPointsByType: Record<string, any>;
   name: string;
@@ -17,7 +18,7 @@ export interface ContractArtifact {
 export class ContractItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
-    public readonly type: "contract" | "deployedContract" | "folder" | "action",
+    public readonly type: "contract" | "deployedContract" | "folder" | "action" | "addExternalContract" | "externalContract",
     public readonly artifact?: ContractArtifact,
     public readonly collapsibleState?: vscode.TreeItemCollapsibleState,
   ) {
@@ -47,6 +48,19 @@ export class ContractItem extends vscode.TreeItem {
           arguments: [],
         };
         break;
+      case "addExternalContract":
+        this.iconPath = new vscode.ThemeIcon("add");
+        this.tooltip = "Add External Contract";
+        this.command = {
+          command: "ankh.addExternalContract",
+          title: "Add External Contract",
+          arguments: []
+        }
+        break;
+      case "externalContract":
+        this.iconPath = new vscode.ThemeIcon("file-code");
+        this.tooltip = `Contract: ${label}`;
+        break;
     }
   }
 }
@@ -63,6 +77,7 @@ export class CairoContractProvider
 
   private contracts: ContractArtifact[] = [];
   private deployedContracts: ContractArtifact[] = [];
+  private externalContracts: ContractArtifact[] = [];
   private customWorkspaceRoot: string | undefined;
 
   constructor(private context: vscode.ExtensionContext) {
@@ -107,6 +122,26 @@ export class CairoContractProvider
         );
       }
 
+      if (this.externalContracts.length > 0) {
+        items.push(
+          new ContractItem(
+            "External",
+            "folder",
+            undefined,
+            vscode.TreeItemCollapsibleState.Expanded,
+          )
+        )
+      }
+
+      items.push(
+        new ContractItem(
+          "Add External Contract",
+          "addExternalContract",
+          undefined,
+          vscode.TreeItemCollapsibleState.None,
+        )
+      )
+
       // if (items.length === 0) {
       //     items.push(new ContractItem('No contracts found', 'folder', undefined, vscode.TreeItemCollapsibleState.None));
       // }
@@ -149,6 +184,15 @@ export class CairoContractProvider
             new ContractItem(contract.name, "deployedContract", contract),
         ),
       );
+    }
+
+    if (element.label === "External") {
+      return Promise.resolve(
+        this.externalContracts.map(
+          (contract) => 
+            new ContractItem(contract.name, "externalContract", contract),
+        )
+      )
     }
 
     return Promise.resolve([]);
@@ -327,6 +371,65 @@ export class CairoContractProvider
     }
   }
 
+  async addExternalContract() {
+    const address = await vscode.window.showInputBox({
+      title: "Contract Address",
+      prompt: "Input the contract address",
+      placeHolder: "0x...",
+      validateInput(value) {
+        if (!value.startsWith("0x")) {
+          return "Must be a string"
+        }
+      },
+    })
+
+    if (!address) return;
+
+    try {
+      const artifact = await this._addExternalContract(address);
+
+      this._onDidChangeTreeData.fire();
+      vscode.window.showInformationMessage(`Added external contract ${artifact.name}`);
+    } catch (err) {
+      console.error(err);
+      vscode.window.showErrorMessage(`Failed to add external contract: ${err}`);
+    }
+
+  }
+
+  private async _addExternalContract(contractAddress: string): Promise<ContractArtifact> {
+    this.externalContracts = [];
+    const rpcUrl = this.getRpcUrl();
+
+    if (rpcUrl === "") {
+      throw new Error("Missing rpc url in environment variables");
+    };
+
+    const provider = new RpcProvider({ nodeUrl: rpcUrl });
+
+    const classDef = await provider.getClassAt(contractAddress)
+    const classHash = await provider.getClassHashAt(contractAddress);
+    const compiledCasm = await provider.getCompiledCasm(classHash);
+    const contractClassVersion = await provider.getContractVersion(contractAddress);
+
+    const newContractArtifact: ContractArtifact = {
+      abi: classDef.abi as any,
+      contractAddress,
+      classHash,
+      entryPointsByType: classDef.entry_points_by_type,
+      name: classDef.abi[0].name,
+      sierraProgram: (classDef as Omit<CompiledSierra, "sierra_program_debug_info">).sierra_program,
+      // sierraProgramDebugInfo: "",
+      compiledCasm,
+      contractClassVersion: contractClassVersion.cairo!
+    }
+
+    this.externalContracts.push(newContractArtifact);
+    console.log(newContractArtifact);
+
+    return newContractArtifact;
+  }
+
   private async ensureScarbTomlHasCasm(workspacePath: string): Promise<void> {
     const scarbTomlPath = path.join(workspacePath, "Scarb.toml");
 
@@ -411,6 +514,38 @@ export class CairoContractProvider
     }
   }
 
+  getRpcUrl(): string {
+    let rpcUrl = "";
+    try {
+      const workspaceFolders = vscode.workspace.workspaceFolders;
+      if (workspaceFolders && workspaceFolders.length > 0) {
+        const envPath = path.join(workspaceFolders[0].uri.fsPath, ".env");
+
+        if (fs.existsSync(envPath)) {
+          const envContent = fs.readFileSync(envPath, "utf8");
+          const envLines = envContent.split("\n");
+
+          envLines.forEach((line) => {
+            const [key, value] = line.split("=");
+            if (key && value) {
+              const trimmedKey = key.trim();
+              const trimmedValue = value.trim();
+
+              if (trimmedKey === "RPC_URL_SEPOLIA") {
+                rpcUrl = trimmedValue;
+              }
+            }
+          });
+        }
+      }
+
+      return rpcUrl;
+    } catch (err) {
+      console.error("Failed to load environment variables: ", err);
+      return "";
+    }
+  }
+
   private async parseContractArtifact(
     filePath: string,
   ): Promise<ContractArtifact | null> {
@@ -425,6 +560,11 @@ export class CairoContractProvider
       const casmPath = `${casmBaseName}.compiled_contract_class.json`;
 
       const casmContent = fs.readFileSync(casmPath, "utf8");
+
+      if (!casmContent || casmContent === "") {
+        return null;
+      }
+
       const casmArtifact = JSON.parse(casmContent);
 
       return {

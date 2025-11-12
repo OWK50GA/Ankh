@@ -22,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   vscode.commands.registerCommand("ankh.itemClicked", (item: ContractItem) => {
-    if (item.type === "contract" || item.type === "deployedContract") {
+    if (item.type === "contract" || item.type === "deployedContract" || item.type === "externalContract") {
       ContractInteractionPanel.createOrShow(context.extensionUri, item);
     }
   });
@@ -79,6 +79,13 @@ export function activate(context: vscode.ExtensionContext) {
       await contractProvider.selectWorkspaceRoot();
     },
   );
+
+  const addExternalContract = vscode.commands.registerCommand(
+    "ankh.addExternalContract",
+    async () => {
+      await contractProvider.addExternalContract()
+    }
+  )
 
   // Command to clear workspace root
   const clearWorkspaceRootCommand = vscode.commands.registerCommand(

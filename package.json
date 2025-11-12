@@ -104,18 +104,8 @@
       ],
       "view/item/context": [
         {
-          "command": "ankh.deployContract",
-          "when": "view == cairoContracts && viewItem == contract",
-          "group": "inline"
-        },
-        {
-          "command": "ankh.interactWithContract",
-          "when": "view == cairoContracts && viewItem == deployedContract",
-          "group": "inline"
-        },
-        {
           "command": "ankh.openContract",
-          "when": "view == ankh && viewItem == contract || viewItem == deployedContract",
+          "when": "view == ankh && viewItem == contract || viewItem == deployedContract || viewItem === externalContract",
           "group": "inline"
         }
       ]
@@ -148,7 +138,8 @@
   },
   "dependencies": {
     "prettier": "^3.4.2",
-    "prettier-standalone": "^1.3.1-0"
+    "prettier-standalone": "^1.3.1-0",
+    "starknet": "^8.5.3"
   },
   "devDependencies": {
     "@types/vscode": "^1.103.0",
