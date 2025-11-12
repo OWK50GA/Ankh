@@ -23,6 +23,7 @@ export const ConfigurationPanel = ({
   //   form,
   inputElements,
   deploying,
+  validating,
   handleDeploy,
   handleLoadContract,
   onCollapse,
@@ -34,6 +35,7 @@ export const ConfigurationPanel = ({
   form: Record<string, any>;
   inputElements: any[];
   deploying: boolean;
+  validating: boolean;
   handleDeploy: () => void;
   handleLoadContract: () => void;
   onCollapse: () => void;
@@ -135,9 +137,9 @@ export const ConfigurationPanel = ({
               <button
                 className="bg-blue-600 px-6 py-2.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-opacity text-white"
                 onClick={handleDeploy}
-                disabled={deploying}
+                disabled={validating || deploying}
               >
-                {deploying ? "Deploying..." : "Deploy"}
+                {validating === true ? "Validating..." : deploying ? "Deploying..." : "Deploy"}
               </button>
             </div>
           </div>

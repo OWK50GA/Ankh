@@ -40,6 +40,7 @@ export default function ConfigurationForm({
   const [isExpanded, setIsExpanded] = useState(true);
   const [isDeployed, setIsDeployed] = useState(true);
   const [deploying, setDeploying] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
 
   const { setContractData, setAccountInfo, setContractFunctionsData } =
     useConfig();
@@ -152,12 +153,14 @@ export default function ConfigurationForm({
   };
 
   const handleDeploy = async () => {
+    setIsValidating(true);
     const values = Object.values(form);
     const isValid = formIsValid(values);
     if (!isValid) {
       notifyFailed("Fill form completely/correctly");
       throw new Error("Form not valid, recheck");
     }
+    setIsValidating(false);
     setDeploying(true);
 
     try {
@@ -280,6 +283,7 @@ export default function ConfigurationForm({
             // form={form}
             inputElements={inputElements}
             deploying={deploying}
+            validating={isValidating}
             handleDeploy={handleDeploy}
             handleLoadContract={handleLoadContract}
             onCollapse={() => setIsExpanded(false)}
