@@ -1,8 +1,8 @@
 {
   "name": "ankh",
-  "displayName": "Ankh",
-  "description": "an extension used to test your cairo code right away",
-  "version": "0.0.8",
+  "displayName": "Ankh Client",
+  "description": "an extension for deploying, and interacting with cairo smart contracts",
+  "version": "0.1.0",
   "publisher": "wilfridokorie",
   "icon": "assets/ankh_logo.png",
   "repository": {
@@ -36,7 +36,13 @@
     "commands": [
       {
         "command": "ankh.refreshContracts",
-        "title": "Refresh Contracts"
+        "title": "Refresh Contracts",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "ankh.refreshSingleContract",
+        "title": "Refresh this contract",
+        "icon": "$(refresh)"
       },
       {
         "command": "ankh.openContract",
@@ -67,6 +73,16 @@
         "command": "ankh.showWorkspaceRoot",
         "title": "Show Current Workspace Root",
         "icon": "$(info)"
+      },
+      {
+        "command": "ankh.savePrivateKey",
+        "title": "Save Private Key",
+        "icon": "$(key)"
+      },
+      {
+        "command": "ankh.deletePrivateKey",
+        "title": "Delete private key",
+        "icon": "$(notebook-delete-cell)"
       }
     ],
     "views": {
@@ -100,22 +116,27 @@
           "command": "ankh.showActivePanels",
           "when": "view == ankh",
           "group": "navigation@4"
+        },
+        {
+          "command": "ankh.refreshContracts",
+          "when": "view == ankh",
+          "group": "navigation@1"
+        },
+        {
+          "command": "ankh.savePrivateKey",
+          "when": "view == ankh",
+          "group": "navigation@5"
         }
       ],
       "view/item/context": [
         {
-          "command": "ankh.deployContract",
-          "when": "view == cairoContracts && viewItem == contract",
-          "group": "inline"
-        },
-        {
-          "command": "ankh.interactWithContract",
-          "when": "view == cairoContracts && viewItem == deployedContract",
-          "group": "inline"
-        },
-        {
           "command": "ankh.openContract",
-          "when": "view == ankh && viewItem == contract || viewItem == deployedContract",
+          "when": "view == ankh && viewItem == contract || viewItem == deployedContract || viewItem === externalContract",
+          "group": "inline"
+        },
+        {
+          "command": "ankh.refreshSingleContract",
+          "when": "view == ankh && viewItem == contract || viewItem == deployedContract || viewItem === externalContract",
           "group": "inline"
         }
       ]
@@ -135,6 +156,26 @@
           "fontCharacter": "\\e002"
         }
       }
+    },
+    "configuration": {
+      "title": "Ankh Client",
+      "properties": {
+        "ankh.rpcUrlSepolia": {
+          "type": "string",
+          "default": "",
+          "description": "RPC URL for Sepolia (Ankh). Example: https://starknet-sepolia.public-node.xyz"
+        },
+        "ankh.accountAddressSepolia": {
+          "type": "string",
+          "default": "",
+          "description": "Account address used by Ankh on Sepolia (0x... format)."
+        },
+        "ankh.useEnvForSecrets": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, Ankh will read secrets (private keys) from .env instead of SecretStorage/settings."
+        }
+      }
     }
   },
   "scripts": {
@@ -148,7 +189,8 @@
   },
   "dependencies": {
     "prettier": "^3.4.2",
-    "prettier-standalone": "^1.3.1-0"
+    "prettier-standalone": "^1.3.1-0",
+    "starknet": "^8.5.3"
   },
   "devDependencies": {
     "@types/vscode": "^1.103.0",

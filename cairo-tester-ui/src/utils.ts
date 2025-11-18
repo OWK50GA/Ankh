@@ -9,6 +9,7 @@ import type {
   AbiStruct,
   ContractArtifact,
   FormErrorMessageState,
+  WebViewPanelState,
 } from "./types";
 import type {
   CairoBigInt,
@@ -49,7 +50,7 @@ import {
   // type DeclareContractPayload,
   // type RawArgs,
   type SierraEntryPointsByType,
-  type SierraProgramDebugInfo,
+  // type SierraProgramDebugInfo,
   type Uint256,
   // type UniversalDetails,
 } from "starknet";
@@ -200,6 +201,15 @@ export const getInitialTupleFormState = (abiParameter: AbiStruct | AbiEnum) => {
   }
   return initialForm;
 };
+
+// export const getInitialEnumFormState = (abiParameter: AbiEnum) => {
+//   const initialForm: Record<string, any> = {};
+
+//   abiParameter.variants.forEach((variant, variantIndex) => {
+//     const key = getFunctionInputKey(abiParameter.name, variant, variantIndex);
+//     initialForm[key] = undefined;
+//   })
+// }
 
 export function getFunctionInputKey(
   functionName: string,
@@ -1003,249 +1013,14 @@ export function getCompiledSierra(
 ): CompiledSierra {
   return {
     sierra_program: contractData.sierraProgram,
-    sierra_program_debug_info:
-      contractData.sierraProgramDebugInfo as SierraProgramDebugInfo,
+    // sierra_program_debug_info:
+    //   contractData.sierraProgramDebugInfo as SierraProgramDebugInfo,
     contract_class_version: contractData.contractClassVersion,
     entry_points_by_type:
       contractData.entryPointsByType as SierraEntryPointsByType,
     abi: contractData.abi,
   };
 }
-
-// const declareIfNot_NotWait = async (
-//   payload: DeclareContractPayload,
-//   provider: RpcProvider,
-//   account: Account,
-//   options?: UniversalDetails,
-// ) => {
-//   const { classHash } = extractContractHashes(payload);
-
-//   try {
-//     await provider.getClassByHash(classHash);
-//     console.log(
-//       "Skipping declare - class hash",
-//       classHash,
-//       "already exists on-chain.",
-//     );
-
-//     return {
-//       classHash,
-//     };
-//   } catch (e) {
-//     if (e instanceof RpcError && e.isType("CLASS_HASH_NOT_FOUND")) {
-//       console.log(
-//         "Class hash",
-//         classHash,
-//         "not found, proceeding with declaration...",
-//       );
-//     } else {
-//       console.error("Error while checking classHash", classHash);
-//       throw e;
-//     }
-//   }
-
-//   try {
-//     await account.declare(payload, {
-//       ...options,
-//       version: constants.TRANSACTION_VERSION.V3,
-//     });
-
-//     // if (networkName === "sepolia" || networkName === "mainnet") {
-//     //   console.log(
-//     //     yellow("Waiting for declaration transaction to be accepted...")
-//     //   );
-//     //   const receipt = await provider.waitForTransaction(transaction_hash);
-//     //   console.log(
-//     //     yellow("Declaration transaction receipt:"),
-//     //     JSON.stringify(
-//     //       receipt,
-//     //       (_, v) => (typeof v === "bigint" ? v.toString() : v),
-//     //       2
-//     //     )
-//     //   );
-
-//     //   const receiptAny = receipt as any;
-//     //   if (receiptAny.execution_status !== "SUCCEEDED") {
-//     //     const revertReason = receiptAny.revert_reason || "Unknown reason";
-//     //     throw new Error(
-//     //       red(`Declaration failed or reverted. Reason: ${revertReason}`)
-//     //     );
-//     //   }
-//     //   console.log(green("Declaration successful"));
-//     // }
-
-//     return {
-//       classHash: classHash,
-//     };
-//   } catch (e) {
-//     if (
-//       e instanceof RpcError &&
-//       e.isType("VALIDATION_FAILURE") &&
-//       e.baseError.data.includes("exceed balance")
-//     ) {
-//       console.error(
-//         "Class declaration failed: deployer",
-//         account.address,
-//         "has insufficient balance.",
-//       );
-//       throw "Class declaration failed: insufficient balance";
-//     }
-
-//     console.error("Class declaration failed: error details below");
-//     console.error(e);
-//     throw "Class declaration failed";
-//   }
-// };
-
-// const deployContract_NotWait = async (
-//   payload: {
-//     salt: string;
-//     classHash: string;
-//     constructorCalldata: RawArgs;
-//   },
-//   account: Account,
-// ) => {
-//   try {
-//     const { addresses } = transaction.buildUDCCall(payload, account.address);
-//     // deployCalls.push(...calls);
-//     return {
-//       contractAddress: addresses[0],
-//     };
-//   } catch (error) {
-//     console.error("Error building UDC call:", error);
-//     throw error;
-//   }
-// };
-
-// type DeployContractParams = {
-//   contract: string;
-//   contractName?: string;
-//   constructorArgs?: RawArgs;
-//   options?: UniversalDetails;
-// };
-
-// export const scaffoldDeployContract = async (
-//   params: DeployContractParams,
-//   compiledContractCasm: CairoAssembly,
-//   // compiledContractSierra: CompiledSierra,
-//   contractData: ContractArtifact,
-//   providerUrl: string,
-//   accountAddress: string,
-//   privateKey: string,
-//   constructorCalldata: Calldata,
-// ): Promise<{
-//   classHash: string;
-//   address: string;
-//   contract: Contract;
-// }> => {
-//   const { contract, constructorArgs, contractName, options } = params;
-
-//   const compiledContractSierra = getCompiledSierra(contractData);
-
-//   const provider = new RpcProvider({ nodeUrl: providerUrl });
-//   if (!provider) {
-//     throw new Error("Invalid RPC Provider");
-//   }
-
-//   const account = new Account(
-//     provider,
-//     accountAddress,
-//     privateKey,
-//     "1",
-//     constants.TRANSACTION_VERSION.V3,
-//   );
-
-//   const abi = compiledContractSierra.abi;
-//   const constructorAbi = abi.find((item: any) => item.type === "constructor");
-//   if (constructorAbi) {
-//     const requiredArgs = constructorAbi.inputs || [];
-//     if (!constructorArgs) {
-//       throw new Error(
-//         `Missing constructor arguments: expected ${
-//           requiredArgs.length
-//         } (${requiredArgs
-//           .map((a: any) => `${a.name}: ${a.type}`)
-//           .join(", ")}), but got none.`,
-//       );
-//     }
-
-//     for (const arg of requiredArgs) {
-//       if (
-//         !(arg.name in constructorArgs) ||
-//         // @ts-expect-error
-//         constructorArgs[arg.name] === undefined ||
-//         // @ts-expect-error
-//         constructorArgs[arg.name] === null ||
-//         // @ts-expect-error
-//         constructorArgs[arg.name] === ""
-//       ) {
-//         throw new Error(
-//           `Missing value for constructor argument '${arg.name}' of type '${arg.type}'.`,
-//         );
-//       }
-//     }
-
-//     // const validationResult = validateConstructorArgsWithStarknetJS(
-//     //   abi,
-//     //   constructorArgs
-//     // );
-//     // if (!validationResult.isValid) {
-//     //   throw new Error(
-//     //     red(`Constructor validation failed: ${validationResult.error}`)
-//     //   );
-//     // }
-//   }
-
-//   // const contractCalldata = new CallData(compiledContractSierra.abi);
-//   // const constructorCalldata = constructorArgs
-//   //   ? contractCalldata.compile("constructor", constructorArgs)
-//   //   : [];
-
-//   console.log("Deploying Contract ", contractName || contract);
-
-//   let { classHash } = await declareIfNot_NotWait(
-//     {
-//       contract: compiledContractSierra,
-//       casm: compiledContractCasm,
-//     },
-//     provider,
-//     account,
-//     options,
-//   );
-
-//   let randomSalt = stark.randomAddress();
-
-//   let { contractAddress } = await deployContract_NotWait(
-//     {
-//       salt: randomSalt,
-//       classHash,
-//       constructorCalldata,
-//     },
-//     account,
-//   );
-
-//   console.log("Contract Deployed at ", contractAddress);
-
-//   // let finalContractName = contractName || contract;
-
-//   // deployments[finalContractName] = {
-//   //   classHash: classHash,
-//   //   address: contractAddress,
-//   //   contract: contract,
-//   // };
-
-//   const deployedContract = new Contract(
-//     compiledContractSierra.abi,
-//     contractAddress,
-//     provider,
-//   );
-
-//   return {
-//     classHash: classHash,
-//     address: contractAddress,
-//     contract: deployedContract,
-//   };
-// };
 
 export async function deployContract(
   contractData: ContractArtifact,
@@ -1261,13 +1036,6 @@ export async function deployContract(
     const compiledSierra = getCompiledSierra(contractData);
     console.log("Compiled sierra available");
 
-    // const customFetch = async (url: string, init?: RequestInit) => {
-    //   return window.fetch(url, {
-    //     ...init,
-    //     credentials: 'omit',
-    //   });
-    // };
-
     const provider = new RpcProvider({ 
       nodeUrl: providerUrl,
     });
@@ -1277,14 +1045,9 @@ export async function deployContract(
       address: accountAddress,
       signer: privateKey,
       cairoVersion: "1",
-      // transactionVersion: constants.TRA
+      transactionVersion: "0x3"
     });
 
-    // provider,
-    //   accountAddress,
-    //   privateKey,
-    //   "1",
-    //   constants.TRANSACTION_VERSION.V3,
     console.log("account available");
 
     const salt = Math.floor(Math.random() * 1000000).toString();
@@ -1339,3 +1102,309 @@ export async function deployContract(
 export const shortenAddress = (address: `0x${string}`) => {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 };
+
+/**
+ * 
+ * RAW ARGUMENTS ENTRY UTILS
+ * 
+ */
+
+function mapJsonToFormValue(
+  jsonValue: any,
+  abiType: any, 
+  abi: Abi,
+): any {
+  if (jsonValue === null || jsonValue === undefined) {
+    if (isCairoOption(abiType.name || abiType.type || "")) {
+      return null;
+    }
+    return jsonValue;
+  }
+
+  // Primitive (base) types:
+  if (abiType.type && !abiType.type.startsWith("core::array::") && abiType.type !== "struct" && abiType.type !== "enum" && !/^\([^()]+\)$/.test(abiType.type)) {
+    if (/int|felt|u256|u?int/.test(String(abiType.type))) {
+      if (typeof jsonValue === "number") return String(jsonValue);
+      return typeof jsonValue === "bigint" ? jsonValue.toString() : String(jsonValue);
+    }
+
+    if (String(abiType.type).includes("contract_address") || String(abiType.type).includes("byte_array") || String(abiType.type).match(/felt/)) {
+      return String(jsonValue);
+    }
+
+    if (String(abiType.type).includes("bool")) {
+      return Boolean(jsonValue);
+    }
+
+    return jsonValue;
+  }
+
+  // Tuple
+  if (abiType.type && /^\([^()]*\)$/.test(String(abiType.type))) {
+    if (!Array.isArray(jsonValue)) {
+      throw new Error("Tuple expected an array in raw JSON");
+    }
+    const match = String(abiType.type).match(/\(([^)]+)\)/);
+    const tupleTypes = match ? match[1].split(/\s*,\s*/) : [];
+    return jsonValue.map((v: any, idx: number) => {
+      const innerTypeStr = tupleTypes[idx];
+      const innerAbiType = getFieldType(innerTypeStr, abi);
+      return mapJsonToFormValue(v, innerAbiType, abi);
+    });
+  }
+
+  // Array type
+  if (abiType.type && String(abiType.type).startsWith("core::array::Array")) {
+    const match = String(abiType.type).match(/<([^>]+)>/);
+    const elemTypeStr = match ? match[1] : null;
+    if (!elemTypeStr) return [];
+    if (!Array.isArray(jsonValue)) throw new Error("Expected array for Array ABI");
+    const elemAbiType = getFieldType(elemTypeStr, abi);
+    return jsonValue.map((item: any) => mapJsonToFormValue(item, elemAbiType, abi));
+  }
+
+  // Span
+  if (abiType.name && String(abiType.name).startsWith("core::array::Span")) {
+    const match = String(abiType.name).match(/<([^>]+)>/);
+    const elemTypeStr = match ? match[1] : null;
+    if (!elemTypeStr) return [];
+    if (!Array.isArray(jsonValue)) throw new Error("Expected array for Span ABI");
+    const elemAbiType = getFieldType(elemTypeStr, abi);
+    return jsonValue.map((item: any) => mapJsonToFormValue(item, elemAbiType, abi));
+  }
+
+  // Struct
+  if (abiType.type === "struct") {
+    // Expect jsonValue as object { memberName: <value>...}
+    if (typeof jsonValue !== "object" || Array.isArray(jsonValue)) {
+      throw new Error("Expected object for struct");
+    }
+    const members = abiType.members || [];
+    const result: Record<string, any> = {};
+    for (const member of members) {
+      const name = member.name!;
+      const memberAbi = member; // contains .type
+      const provided = jsonValue[name];
+      // map child value recursively
+      result[name] = {
+        type: memberAbi.type,
+        value: mapJsonToFormValue(provided, getFieldType(memberAbi.type, abi), abi),
+      };
+    }
+    return result;
+  }
+
+  // Enum (and variant)
+  if (abiType.type === "enum") {
+    if (typeof jsonValue === "number" || typeof jsonValue === "string" && /^\d+$/.test(jsonValue)) {
+      // numeric variant index -> try to map to variant name
+      const idx = Number(jsonValue);
+      const variant = abiType.variants?.[idx];
+      if (!variant) return jsonValue;
+      // if variant has no associated data, store variant as { variant: { Name: { type, value: undefined } } }
+      const inner = {};
+      // @ts-ignore
+      inner[variant.name] = { type: variant.type, value: undefined };
+      return { variant: inner };
+    }
+
+    if (typeof jsonValue === "object" && !Array.isArray(jsonValue)) {
+      // If user provides { VariantName: value } or { variant: { VariantName: value } }
+      const data = jsonValue.variant ? jsonValue.variant : jsonValue;
+      const variantName = Object.keys(data)[0];
+      const variantValue = data[variantName];
+      const variantDef = (abiType.variants || []).find((v: any) => v.name === variantName);
+      if (!variantDef) {
+        // unknown variant - store raw
+        const inner: any = {};
+        inner[variantName] = { type: variantDef?.type ?? "unknown", value: variantValue };
+        return { variant: inner };
+      }
+      return {
+        variant: {
+          [variantName]: {
+            type: variantDef.type,
+            value: mapJsonToFormValue(variantValue, getFieldType(variantDef.type, abi), abi),
+          },
+        },
+      };
+    }
+
+    return jsonValue;
+  }
+
+  // Fallback
+  return jsonValue;
+}
+
+function mapFormValueToJson(formValue: any, abiType: any, abi: Abi): any {
+  if (formValue === null || formValue === undefined) return null;
+
+  if (abiType.type && !abiType.type.startsWith("core::array::") && abiType.type !== "struct" && abiType.type !== "enum" && !/^\([^()]+\)$/.test(abiType.type)) {
+    if (typeof formValue === "string" && /^\d+$/.test(formValue) && BigInt(formValue) <= BigInt(Number.MAX_SAFE_INTEGER)) {
+      return Number(formValue);
+    }
+    return formValue;
+  }
+
+  // Tuple
+  if (abiType.type && /^\([^()]*\)$/.test(String(abiType.type))) {
+    if (!Array.isArray(formValue)) return [];
+    const match = String(abiType.type).match(/\(([^)]+)\)/);
+    const tupleTypes = match ? match[1].split(/\s*,\s*/) : [];
+    return formValue.map((v: any, idx: number) => mapFormValueToJson(v, getFieldType(tupleTypes[idx], abi), abi));
+  }
+
+  // Array
+  if (abiType.type && String(abiType.type).startsWith("core::array::Array")) {
+    const match = String(abiType.type).match(/<([^>]+)>/);
+    const elemTypeStr = match ? match[1] : null;
+    if (!elemTypeStr) return [];
+    if (!Array.isArray(formValue)) return [];
+    const elemAbiType = getFieldType(elemTypeStr, abi);
+    return formValue.map((item: any) => mapFormValueToJson(item, elemAbiType, abi));
+  }
+
+  // Span
+  if (abiType.name && String(abiType.name).startsWith("core::array::Span")) {
+    const match = String(abiType.name).match(/<([^>]+)>/);
+    const elemTypeStr = match ? match[1] : null;
+    if (!elemTypeStr) return [];
+    if (!Array.isArray(formValue)) return [];
+    const elemAbiType = getFieldType(elemTypeStr, abi);
+    return formValue.map((item: any) => mapFormValueToJson(item, elemAbiType, abi));
+  }
+
+  // Struct
+  if (abiType.type === "struct") {
+    const members = abiType.members || [];
+    const out: Record<string, any> = {};
+    for (const member of members) {
+      const k = member.name!;
+      const entry = formValue?.[k];
+      if (!entry) {
+        out[k] = null;
+        continue;
+      }
+      out[k] = mapFormValueToJson(entry.value, getFieldType(member.type, abi), abi);
+    }
+    return out;
+  }
+
+  // Enum
+  if (abiType.type === "enum") {
+    const variantObj = formValue?.variant ?? {};
+    const variantKey = Object.keys(variantObj)[0];
+    if (!variantKey) return null;
+    const entry = variantObj[variantKey];
+    return { [variantKey]: mapFormValueToJson(entry.value, getFieldType(entry.type, abi), abi) };
+  }
+  //   // inside mapFormValueToJson(...)
+  //   // Enum: formValue likely { variant: { VariantName: { type, value } } }
+  //   // inside mapFormValueToJson(...) where you handle enums
+  // if (abiType.type === "enum") {
+  //   // Expect formValue to be { variant: { VariantName: { type, value }, ... } } (canonical)
+  //   const variantsDef = abiType.variants || []; // ABI variant defs
+  //   const variantObj = formValue?.variant ?? {};
+
+  //   // Build result object with all variant names
+  //   const result: Record<string, any> = {};
+
+  //   // Find active variant(s): those with value !== undefined
+  //   // If multiple are set, we prefer the first non-undefined one as "active" for mapping;
+  //   // but we will still include all keys in output.
+  //   for (const variantDef of variantsDef) {
+  //     const vName = variantDef.name;
+  //     const entry = variantObj[vName];
+
+  //     if (entry && Object.prototype.hasOwnProperty.call(entry, "value")) {
+  //       // Map the defined value recursively
+  //       const entryType = entry.type ?? variantDef.type;
+  //       result[vName] = mapFormValueToJson(entry.value, getFieldType(entryType, abi), abi);
+  //     } else {
+  //       // explicitly set undefined so JSON contains the key
+  //       result[vName] = null;
+  //     }
+  //   }
+
+  //   return result;
+  // }
+
+
+
+  // Fallback
+  return formValue;
+}
+
+export function applyNamedJsonToForm(
+  fn: any, // function ABI
+  jsonObj: Record<string, any>,
+  abi: Abi,
+  setForm: (updater: (prev: Record<string, any> | undefined) => Record<string, any>) => void,
+) {
+  setForm((prev = {}) => {
+    const next = { ...prev };
+    (fn.inputs || []).forEach((input: any, idx: number) => {
+      const paramName = input.name || `arg${idx}`;
+      if (!(paramName in jsonObj)) {
+        return;
+      }
+      const key = getFunctionInputKey(fn.name, input, idx);
+      const fieldType = getFieldType(input.type, abi);
+      next[key] = mapJsonToFormValue(jsonObj[paramName], fieldType, abi);
+    });
+    return next;
+  });
+}
+
+export function applyPositionalJsonToForm(
+  fn: any,
+  arr: any[],
+  abi: Abi,
+  setForm: (updater: (prev: Record<string, any> | undefined) => Record<string, any>) => void,
+) {
+  setForm((prev = {}) => {
+    const next = { ...prev };
+    (fn.inputs || []).forEach((input: any, idx: number) => {
+      if (idx >= arr.length) return;
+      const key = getFunctionInputKey(fn.name, input, idx);
+      const fieldType = getFieldType(input.type, abi);
+      next[key] = mapJsonToFormValue(arr[idx], fieldType, abi);
+    });
+    return next;
+  });
+}
+
+export function createNamedObjectFromForm(
+  fn: AbiFunction, 
+  form: Record<string, any> | undefined, 
+  abi: Abi
+) {
+  const out: Record<string, any> = {};
+  (fn.inputs || []).forEach((input: AbiParameter, idx: number) => {
+    const key = getFunctionInputKey(fn.name, input, idx);
+    const fieldType = getFieldType(input.type, abi);
+
+    const val = form?.[key];
+    out[input.name || `arg${idx}`] = mapFormValueToJson(val, fieldType, abi);
+  });
+  return out;
+}
+
+export function createPositionalArrayFromForm(
+  fn: any, 
+  form: Record<string, any> | undefined, 
+  abi: Abi, 
+) {
+  return (fn.inputs || []).map((input: any, idx: number) => {
+    const key = getFunctionInputKey(fn.name, input, idx);
+    const fieldType = getFieldType(input.type, abi);
+    return mapFormValueToJson(form?.[key], fieldType, abi);
+  });
+}
+
+export const persistState = (state: WebViewPanelState) => {
+  if (window.vscode) {
+    window.vscode.postMessage({ type: "updateState", data: state });
+  }
+}

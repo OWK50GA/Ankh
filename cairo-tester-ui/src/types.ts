@@ -26,7 +26,7 @@ export type ContractArtifact = {
   classHash?: string;
   contractAddress?: string;
   sierraProgram: string[];
-  sierraProgramDebugInfo: Record<string, any>;
+  sierraProgramDebugInfo?: Record<string, any>;
   contractClassVersion: string;
   entryPointsByType: Record<string, any>;
   name: string;
@@ -103,3 +103,12 @@ export type CommonInputProps<T = string> = {
   placeholder?: string;
   disabled?: boolean;
 };
+
+export type WebViewPanelState  = {
+  contractName: string;
+  deploymentInfo?: {
+    classHash?: string;
+    contractAddress?: string;
+  };
+  logs?: string[];
+}

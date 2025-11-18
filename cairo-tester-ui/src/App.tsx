@@ -1,23 +1,31 @@
 import { useState, useEffect } from "react";
 import ContractUI from "./components/ContractUI";
-import type { AccountInfo, ContractArtifact } from "./types";
-import { StarknetProvider } from "./contexts/StarknetProvider";
+import type { AccountInfo, ContractArtifact, WebViewPanelState } from "./types";
 import ConfigurationForm from "./components/ConfigurationForm";
 import { Toaster } from "react-hot-toast";
+import { useConfig } from "./contexts/cairoTesterContext";
 
 function App() {
-  const [contractData, setContractData] = useState<ContractArtifact | null>(
-    null,
-  );
+  // const [contractData, setContractData] = useState<ContractArtifact | null>(
+  //   null,
+  // );
+  const { 
+    contractData, 
+    setContractData, 
+    accountInfo, 
+    setAccountInfo,
+    setContractFunctionsData
+  } = useConfig();
   const [contractDataLoading, setContractDataLoading] = useState(true);
   const [accountInfoLoading, setAccountInfoLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
+  // const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
 
   useEffect(() => {
     if (window.vscode) {
       window.vscode.postMessage({ type: "getContractData" });
       window.vscode.postMessage({ type: "getAccountInfo" });
+      window.vscode.postMessage({ type: "getPersistentState" });
     }
 
     const handleContractDataMessage = (event: MessageEvent) => {
@@ -49,17 +57,49 @@ function App() {
       }
     };
 
+    const handlePersistentStateMessage = (event: MessageEvent) => {
+      const message = event.data;
+
+      if (message.type === "persistentState") {
+        const data = (message.data as WebViewPanelState) || (message as WebViewPanelState);
+
+        if (data.deploymentInfo) {
+          const contractAddress = data.deploymentInfo.contractAddress;
+          const classHash = data.deploymentInfo.classHash;
+
+          // if (!verifyClassHash(classHash!)) return;
+
+          if (contractAddress) {
+            setContractData((prev: any) => ({
+              ...prev,
+              contractAddress: contractAddress,
+            }));
+            setContractFunctionsData((prev: any) => ({
+              ...prev,
+              contractAddress: contractAddress,
+            }));
+            console.log("FOund persistent contract address and class hash")
+          }
+          if (classHash) {
+            setContractData((prev: any) => ({ ...prev, classHash: classHash }));
+          }
+        }
+      }
+    };
+
     window.addEventListener("message", handleContractDataMessage);
     window.addEventListener("message", handleAccountInfoMessage);
+    window.addEventListener("message", handlePersistentStateMessage);
 
     return () => {
       window.removeEventListener("message", handleContractDataMessage);
       window.removeEventListener("message", handleAccountInfoMessage);
+      window.removeEventListener("message", handlePersistentStateMessage);
     };
   }, []);
 
   return (
-    <StarknetProvider>
+    <>
       <Toaster />
       {/* <CairoTesterProvider> */}
 
@@ -108,7 +148,7 @@ function App() {
         )}
       </div>
       {/* </CairoTesterProvider> */}
-    </StarknetProvider>
+    </>
   );
 }
 

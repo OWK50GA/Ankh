@@ -5,6 +5,7 @@ import {
 } from "../providers/CairoContractsProvider";
 import * as path from "path";
 import * as fs from "fs";
+import { CairoAssembly, CompiledSierra, extractContractHashes, SierraEntryPointsByType } from "starknet";
 
 interface PanelState {
   contractName: string;
@@ -13,6 +14,20 @@ interface PanelState {
     contractAddress?: string;
   };
   logs?: string[];
+}
+
+export function getCompiledSierra(
+  contractData: ContractArtifact,
+): CompiledSierra {
+  return {
+    sierra_program: contractData.sierraProgram,
+    // sierra_program_debug_info:
+    //   contractData.sierraProgramDebugInfo as SierraProgramDebugInfo,
+    contract_class_version: contractData.contractClassVersion,
+    entry_points_by_type:
+      contractData.entryPointsByType as SierraEntryPointsByType,
+    abi: contractData.abi,
+  };
 }
 
 export class ContractInteractionPanel {
@@ -77,6 +92,15 @@ export class ContractInteractionPanel {
 
     ContractInteractionPanel.activePanels.set(contractName!, contractPanel);
     return contractPanel;
+  }
+
+  public static refreshContract(
+    contractItem: ContractItem,
+  ) {
+    const contractName = contractItem.artifact?.name;
+    if (!contractName) return;
+    const panel = ContractInteractionPanel.activePanels.get(contractName);
+    panel?.updateContract(contractItem.artifact);
   }
 
   public static getActivePanels(): ContractInteractionPanel[] {
@@ -161,6 +185,16 @@ export class ContractInteractionPanel {
         );
 
       if (savedState) {
+        const { deploymentInfo } = savedState;
+        if (deploymentInfo) {
+          const classHash = deploymentInfo.classHash;
+          const compiledSierra = getCompiledSierra(this._contract);
+          const { classHash: extractedContractHash } = extractContractHashes({
+            casm: this._contract.compiledCasm as CairoAssembly,
+            contract: compiledSierra
+          })
+          if (classHash !== extractedContractHash) return;
+        }
         this._state = { ...this._state, ...savedState };
         console.log(
           `Loaded persisted state for ${this._contract.name}:`,
@@ -185,8 +219,71 @@ export class ContractInteractionPanel {
     this._saveState();
   }
 
-  private _loadEnvironmentVariables() {
+  private async saveSetting(key: string, value: string, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global) {
+    const config = vscode.workspace.getConfiguration("ankh");
+    await config.update(key, value, target);
+  }
+
+  private async readSetting(key: string): Promise<string> {
+    const config = vscode.workspace.getConfiguration("ankh");
+    return config.get(key) || "";
+  }
+
+  private async _savePrivateKey(privateKey: string) {
+    ContractInteractionPanel.context.secrets.store("privateKeySepolia", privateKey);
+  }
+
+  public static async savePrivateKey() {
+    const input = await vscode.window.showInputBox({
+      prompt: `Enter private key for sepolia`,
+      ignoreFocusOut: true,
+      password: true, // masks input
+    });
+    if (!input) {
+      vscode.window.showInformationMessage('Private key not saved.');
+      return;
+    }
+    // validate quickly (optional)
+    if (!input.startsWith('0x') || input.length < 10) {
+      const cont = await vscode.window.showWarningMessage('Private key looks invalid. Save anyway?', 'Yes', 'No');
+      if (cont !== 'Yes') return;
+    }
+    await ContractInteractionPanel.context.secrets.store("privateKeySepolia", input);
+    vscode.window.showInformationMessage(`Private key saved for sepolia.`);
+  }
+
+  private async getPrivateKey(): Promise<string> {
+    const key = await ContractInteractionPanel.context.secrets.get("privateKeySepolia")
+    if (!key || key === "") {
+      return ""
+    }
+    return key
+  }
+
+  public static async deletePrivateKey(): Promise<boolean> {
     try {
+      const userPk = await ContractInteractionPanel.context.secrets.get("privateKeySepolia")
+      await ContractInteractionPanel.context.secrets.delete("privateKeySepolia");
+      return true
+    } catch(err) {
+      vscode.window.showErrorMessage(`Failed to delete private key: ${(err as Error).message}`)
+      return false
+    }
+  }
+
+  private async _loadEnvironmentVariables() {
+    try {
+      const privateKey = await this.getPrivateKey();
+      const accountAddressSepolia = await this.readSetting("accountAddressSepolia");
+      const rpcUrlSepolia = await this.readSetting("rpcUrlSepolia");
+
+      this._accountInfo.privateKey = privateKey;
+      this._accountInfo.walletAddress = accountAddressSepolia;
+      this._accountInfo.rpcUrl = rpcUrlSepolia;
+
+      const noEmptyString = Object.values(this._accountInfo).every((value) => value.length !== 0 && value !== "");
+      if (noEmptyString) return;
+
       if (!this._accountInfo.privateKey || !this._accountInfo.walletAddress) {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (workspaceFolders && workspaceFolders.length > 0) {
@@ -204,10 +301,13 @@ export class ContractInteractionPanel {
 
                 if (trimmedKey === "PRIVATE_KEY_SEPOLIA") {
                   this._accountInfo.privateKey = trimmedValue;
+                  this._savePrivateKey(trimmedValue);
                 } else if (trimmedKey === "RPC_URL_SEPOLIA") {
                   this._accountInfo.rpcUrl = trimmedValue;
+                  this.saveSetting("rpcUrlSepolia", trimmedValue);
                 } else if (trimmedKey === "ACCOUNT_ADDRESS_SEPOLIA") {
                   this._accountInfo.walletAddress = trimmedValue;
+                  this.saveSetting("accountAddressSepolia", trimmedValue);
                 }
               }
             });
@@ -246,6 +346,7 @@ export class ContractInteractionPanel {
     const webview = this._panel.webview;
     this._panel.title = `${this._contract.name} - Contract Interaction`;
     this._panel.webview.html = this._getHtmlForWebview(webview);
+    this._loadEnvironmentVariables();
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
@@ -296,22 +397,6 @@ export class ContractInteractionPanel {
                     // Request initial contract data
                     window.vscode.postMessage({ type: 'getContractData' });
                     window.vscode.postMessage({ type: 'getAccountInfo' });
-                    
-                    // window.addEventListener('message', event => {
-                    //     const message = event.data;
-                    //     if (message.type === 'accountInfo') {
-                    //         window.accountInfo = message.data;
-                    //         console.log('Account info received:', {
-                    //             ...message.data,
-                    //             privateKey: message.data.privateKey ? '***' + message.data.privateKey.slice(-4) : 'Not set'
-                    //         });
-                            
-                    //         // Dispatch a custom event for React components to listen to
-                    //         window.dispatchEvent(new CustomEvent('accountInfoUpdated', {
-                    //             detail: message.data
-                    //         }));
-                    //     }
-                    // });
                 </script>
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
