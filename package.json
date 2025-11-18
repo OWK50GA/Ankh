@@ -2,7 +2,7 @@
   "name": "ankh",
   "displayName": "Ankh Client",
   "description": "an extension for deploying, and interacting with cairo smart contracts",
-  "version": "0.1.0-beta",
+  "version": "0.1.0",
   "publisher": "wilfridokorie",
   "icon": "assets/ankh_logo.png",
   "repository": {
