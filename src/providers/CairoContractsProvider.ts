@@ -60,6 +60,11 @@ export class ContractItem extends vscode.TreeItem {
       case "externalContract":
         this.iconPath = new vscode.ThemeIcon("file-code");
         this.tooltip = `Contract: ${label}`;
+        this.command = {
+          command: "ankh.openContract",
+          title: "Open External Contract",
+          arguments: [this],
+        };
         break;
     }
   }
@@ -377,8 +382,10 @@ export class CairoContractProvider
       prompt: "Input the contract address",
       placeHolder: "0x...",
       validateInput(value) {
-        if (!value.startsWith("0x")) {
-          return "Must be a string"
+        const starknetAddressRegex = /^0x[0-9a-fA-F]{64}$/;
+
+        if (!starknetAddressRegex.test(value)) {
+          return "Must be a valid Starknet address format"
         }
       },
     })
@@ -390,6 +397,10 @@ export class CairoContractProvider
 
       this._onDidChangeTreeData.fire();
       vscode.window.showInformationMessage(`Added external contract ${artifact.name}`);
+      this.context.workspaceState.update(
+        "externalContracts",
+        this.externalContracts
+      )
     } catch (err) {
       console.error(err);
       vscode.window.showErrorMessage(`Failed to add external contract: ${err}`);
@@ -398,7 +409,6 @@ export class CairoContractProvider
   }
 
   private async _addExternalContract(contractAddress: string): Promise<ContractArtifact> {
-    this.externalContracts = [];
     const rpcUrl = this.getRpcUrl();
 
     if (rpcUrl === "") {
@@ -541,7 +551,7 @@ export class CairoContractProvider
 
       return rpcUrl;
     } catch (err) {
-      console.error("Failed to load environment variables: ", err);
+      console.error("Failed to get rpc url: ", err);
       return "";
     }
   }

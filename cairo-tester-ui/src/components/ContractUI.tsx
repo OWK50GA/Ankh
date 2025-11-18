@@ -18,9 +18,17 @@ export default function ContractUI({
   const [form, setForm] = useState<Record<string, any>>({});
   const [response, setResponse] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const { contractFunctionsData, setContractFunctionsData, setContractData, contractData: contextContractData } =
+  useConfig();
+  
+  const [readyForInteraction, setReadyForInteraction] = useState(!!contractFunctionsData?.contractAddress)
 
-  const { contractFunctionsData, setContractFunctionsData, setContractData } =
-    useConfig();
+  useEffect(() => {
+    if (contextContractData?.contractAddress) {
+      setReadyForInteraction(true);
+    }
+  }, [contextContractData])
 
   useEffect(() => {
     if (contractData) {
@@ -35,11 +43,12 @@ export default function ContractUI({
     return <div>Error Finding Contract Data</div>;
   }
 
-  console.log("Contract data: ", contractData);
-  console.log("Contract Functions data: ", contractFunctionsData);
-  console.log(contractData.abi);
+  useEffect(() => {
+    if (Object.values(form).length === 0) return;
 
-  const readyForInteraction = !!contractFunctionsData?.contractAddress;
+    console.log(form);
+  }, [form])
+  // const readyForInteraction = !!contractFunctionsData?.contractAddress;
 
   const abi = contractData?.abi;
 

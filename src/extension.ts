@@ -41,6 +41,13 @@ export function activate(context: vscode.ExtensionContext) {
     },
   );
 
+  const refreshSingleContract = vscode.commands.registerCommand(
+    "ankh.refreshSingleContract",
+    (item: ContractItem) => {
+      ContractInteractionPanel.refreshContract(item);
+    }
+  )
+
   const openContractCommand = vscode.commands.registerCommand(
     "ankh.openContract",
     (item: ContractItem) => {
@@ -116,6 +123,15 @@ export function activate(context: vscode.ExtensionContext) {
     },
   );
 
+  const savePrivateKey = vscode.commands.registerCommand("ankh.savePrivateKey", async () => {
+    await ContractInteractionPanel.savePrivateKey()
+  })
+
+  const deletePrivateKey = vscode.commands.registerCommand("ankh.deletePrivateKey", async () => {
+    const pkDeleted = await ContractInteractionPanel.deletePrivateKey();
+    return pkDeleted
+  })
+
   const workspaceWatcher = vscode.workspace.onDidChangeWorkspaceFolders(() => {
     ContractInteractionPanel.closeAll();
   });
@@ -138,6 +154,10 @@ export function activate(context: vscode.ExtensionContext) {
     selectWorkspaceRootCommand,
     showWorkspaceRootCommand,
     clearWorkspaceRootCommand,
+    addExternalContract,
+    savePrivateKey,
+    deletePrivateKey,
+    refreshSingleContract
   );
 }
 

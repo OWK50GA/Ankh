@@ -17,7 +17,29 @@ Ankh brings the power of Starknet development directly into your VS Code workspa
 - Declare Contracts: Deploy contract classes to Starknet and receive class hashes
 - Deploy Instances: Deploy contract instances from declared classes
 - Function Interaction: Call both view and write functions directly from the interface
-- Real-time Logging: Track all operations with timestamped logs
+
+### External Contract Support
+
+Load and Interact with contracts already deployed on Starknet such as ERC20:
+
+- Enter their contract address
+- Automatic class hash verification
+- ABI-based Interaction UI even for external contracts
+
+### Raw Input Mode
+
+Switch between:
+- Form Input mode (structured input fields)
+- Raw Mode (direct JSON input)
+
+Ankh automatically validates and confirms each node
+
+### Built-in Account Storage
+
+You no longer need a `.env` file:
+- Store private keys, RPC URLs, and account addresses directly in your vscode configuration
+- Settings persist across all your vscode instances, so you never need to set them again
+- Support still remains fully for a `.env` file
 
 ### Developer Experience
 
@@ -34,13 +56,8 @@ Ankh brings the power of Starknet development directly into your VS Code workspa
 - Input Validation: Smart input handling for different Cairo data types
 - State Management: Remembers deployment information and interaction history
 
-<!-- Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
 
-For example if there is an image subfolder under your extension project workspace: -->
-
-<!-- \!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow. -->
+<!-- > Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow. -->
 
 ### Installation
 
@@ -59,20 +76,31 @@ For example if there is an image subfolder under your extension project workspac
 
 ### Environment Setup
 
+- In your scarb.toml in your root contracts folder, set the line before you build:
+
+```
+[[target.starknet-contract]]
+sierra = true
+casm = true
+```
+
+`scarb build` your workspace
+
+#### Option 1: VScode settings
+
+- Go to vscode settings (Ctrl + ,)
+- Go under Extension Settings, add an account address and rpc url to be using
+- Go to the top of the Ankh tree view, click on the key icon and add your private key (if you want it saved to vscode secrets)
+- If you don't want it saved to secrets, use a `.env` for it
+
+#### Option 2: `.env`
+
 - Create a `.env` file in your project root
 
 ```env
 PRIVATE_KEY_SEPOLIA=0x1234...
 ACCOUNT_ADDRESS_SEPOLIA=0x5678...
 RPC_URL_SEPOLIA=https://starknet-sepolia.public.blastapi.io/rpc/v0_8
-```
-
-- In your scarb.toml in your root contracts folder, set the line:
-
-```
-[[target.starknet-contract]]
-sierra = true
-casm = true
 ```
 
 ### Basic Usage
@@ -119,10 +147,8 @@ Access these commands via the Command Palette (`Ctrl+Shift+P`):
 
 - One-click contract declare and deploy to Starknet
 - Automatic class hash generation and display
-- Interact with an already-deployed address of a contract provided it is the same abi (or even similar enough)
-<!-- - Persistent deployment information across sessions -->
-
-<!-- \!\[Ankh UI\]\(./assets/ankh-panel-view.png\) -->
+- Interact with an already-deployed address of a contract provided it is the same classHash
+- Persistent deployment information across sessions
 
 ### Function Interaction
 

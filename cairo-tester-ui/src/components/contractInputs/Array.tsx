@@ -55,6 +55,15 @@ export const ArrayInput = ({
     return Array.isArray(parsed) ? parsed[0] : parsed;
   }, [abiParameter.type]);
 
+  useEffect(() => {
+    if (!parentForm || Object.keys(parentForm).length === 0) return;
+
+    let currentArray = parentForm[parentStateObjectKey];
+    setInputArr(currentArray);
+    setArrLength(currentArray.length - 1);
+
+  }, []);
+
   // side effect to transform data before setState
   useEffect(() => {
     // non empty objects only
