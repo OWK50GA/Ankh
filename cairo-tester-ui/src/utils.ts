@@ -1022,7 +1022,7 @@ export function getCompiledSierra(
   };
 }
 
-export async function _deployContract(
+export async function deployContract(
   contractData: ContractArtifact,
   providerUrl: string,
   accountAddress: string,
@@ -1052,6 +1052,8 @@ export async function _deployContract(
 
     const salt = Math.floor(Math.random() * 1000000).toString();
 
+    const starknetVersion = await provider.getStarknetVersion();
+
     const {
       contract: _extractedContract,
       classHash,
@@ -1060,7 +1062,7 @@ export async function _deployContract(
     } = extractContractHashes({
       contract: compiledSierra,
       casm: contractData.compiledCasm,
-    });
+    }, starknetVersion);
 
     if (!classHash || !classHash || !compiledClassHash || !casm) {
       throw new Error("Failed to extract contract Hashes");
@@ -1099,7 +1101,7 @@ export async function _deployContract(
   }
 }
 
-export async function deployContract(
+export async function _deployContract(
   contractData: ContractArtifact,
   providerUrl: string,
   accountAddress: string,
