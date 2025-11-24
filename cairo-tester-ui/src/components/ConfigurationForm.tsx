@@ -12,7 +12,6 @@ import {
 } from "../utils";
 import ContractInput from "./ContractInput";
 import { ConfigStatusBar } from "./ConfigStatusBar";
-import type { Address } from "@starknet-react/chains";
 import type {
   AccountInfo,
   ContractArtifact,
@@ -27,9 +26,9 @@ type NetworkType = "devnet" | "sepolia" | "mainnnet";
 type FormInputFields = {
   network: NetworkType;
   rpcUrl: string;
-  account: Address;
+  account: `0x${string}`;
   classHash?: string;
-  contractAddress?: Address;
+  contractAddress?: `0x${string}`;
 };
 
 export default function ConfigurationForm({
@@ -86,7 +85,7 @@ export default function ConfigurationForm({
   const [formInputValues, setFormInputValues] = useState<FormInputFields>({
     network: "sepolia",
     rpcUrl: accountInfo.rpcUrl,
-    account: accountInfo.walletAddress as Address,
+    account: accountInfo.walletAddress as `0x${string}`,
   });
 
   const [form, setForm] = useState<Record<string, any>>(() =>
@@ -212,7 +211,7 @@ export default function ConfigurationForm({
       persistState({
         contractName: contractData.name,
         deploymentInfo: {
-          classHash,
+          classHash: classHash.toString(),
           contractAddress: contract.address
         }
       })

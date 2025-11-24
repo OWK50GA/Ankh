@@ -2,15 +2,14 @@ import { ChevronRight, Settings } from "lucide-react";
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { CopyButton } from "./CopyButton";
 import type { AccountInfo, ContractArtifact } from "../types";
-import type { Address } from "@starknet-react/chains";
 // import { useConfig } from "../contexts/cairoTesterContext";
 
 type FormInputFields = {
   network: NetworkType;
   rpcUrl: string;
-  account: Address;
+  account: `0x${string}`;
   classHash?: string;
-  contractAddress?: Address;
+  contractAddress?: `0x${string}`;
 };
 
 type NetworkType = "devnet" | "sepolia" | "mainnnet";

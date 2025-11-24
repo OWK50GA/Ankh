@@ -526,6 +526,11 @@ export class CairoContractProvider
 
   getRpcUrl(): string {
     let rpcUrl = "";
+
+    const config = vscode.workspace.getConfiguration("ankh");
+    rpcUrl = config.get("rpcUrlSepolia") || "";
+
+    if (rpcUrl !== "") return rpcUrl
     try {
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (workspaceFolders && workspaceFolders.length > 0) {

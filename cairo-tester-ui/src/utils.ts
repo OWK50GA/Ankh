@@ -1022,7 +1022,7 @@ export function getCompiledSierra(
   };
 }
 
-export async function deployContract(
+export async function _deployContract(
   contractData: ContractArtifact,
   providerUrl: string,
   accountAddress: string,
@@ -1091,7 +1091,95 @@ export async function deployContract(
 
     return {
       contract,
-      classHash,
+      classHash: classHash.toString(),
+    };
+  } catch (err) {
+    console.error("Error deploying contract: ", (err as Error).message);
+    throw err;
+  }
+}
+
+export async function deployContract(
+  contractData: ContractArtifact,
+  providerUrl: string,
+  accountAddress: string,
+  privateKey: string,
+  constructorCalldata: Calldata,
+): Promise<{
+  contract: Contract;
+  classHash: string;
+}> {
+  try {
+    const compiledSierra = getCompiledSierra(contractData);
+    console.log("Compiled sierra available");
+
+    const provider = new RpcProvider({ 
+      nodeUrl: providerUrl,
+    });
+    console.log("rpc url available");
+    const account = new Account({
+      provider,
+      address: accountAddress,
+      signer: privateKey,
+      cairoVersion: "1",
+      transactionVersion: "0x3"
+    });
+
+    console.log("account available");
+
+    const salt = Math.floor(Math.random() * 1000000).toString();
+
+    // const {
+    //   contract: _extractedContract,
+    //   classHash,
+    //   compiledClassHash,
+    //   casm,
+    // } = extractContractHashes({
+    //   contract: compiledSierra,
+    //   casm: contractData.compiledCasm,
+    // });
+
+    // if (!classHash || !classHash || !compiledClassHash || !casm) {
+    //   throw new Error("Failed to extract contract Hashes");
+    // }
+
+    console.log("Successfully computed contract hashes");
+
+    // const { declare, deploy } = await account.declareAndDeploy({
+    //   classHash,
+    //   constructorCalldata: constructorCalldata
+    //     ? constructorCalldata
+    //     : undefined,
+    //   salt,
+    //   contract: compiledSierra,
+    //   compiledClassHash,
+    //   casm: contractData.compiledCasm,
+    // });
+
+    const { declare, deploy } = await account.declareAndDeploy({
+      contract: compiledSierra,
+      casm: contractData.compiledCasm,
+      constructorCalldata: constructorCalldata
+        ? constructorCalldata
+        : undefined,
+      salt
+    })
+
+    const { class_hash: classHash } = declare;
+
+    // const contract = new Contract(compiledSierra.abi, deploy.address, provider);
+    const contract = new Contract({
+      abi: compiledSierra.abi,
+      address: deploy.address,
+      providerOrAccount: provider
+    })
+
+    console.log(declare.transaction_hash);
+    console.log(deploy.transaction_hash);
+
+    return {
+      contract,
+      classHash: classHash.toString(),
     };
   } catch (err) {
     console.error("Error deploying contract: ", (err as Error).message);
