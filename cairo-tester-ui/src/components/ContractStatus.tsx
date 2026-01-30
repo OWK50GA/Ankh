@@ -15,7 +15,7 @@ export const ContractStatus = ({
 }) => {
   const { contractData } = useConfig();
 
-  const { contractAddress, name: contractName } = contractData!;
+  const { contractAddress, name: contractName, classHash } = contractData!;
 
   return (
     <div className="bg-[#1E1E1E] border border-green-700/50 rounded-lg p-3 flex items-center justify-between">
@@ -25,9 +25,19 @@ export const ContractStatus = ({
           <div className="font-medium text-sm">{contractName}</div>
           {contractAddress && (
             <div className="flex items-center gap-2 text-xs text-gray-400 min-w-0">
-              <span className="truncate">{contractAddress}</span>
+              <span className="truncate"> <span className="font-bold text-white">Deployed at: </span>{contractAddress}</span>
               <CopyButton
                 copyText={contractAddress}
+                className="flex-shrink-0"
+              />
+            </div>
+          )}
+
+          {classHash && (
+            <div className="flex items-center gap-2 text-xs text-gray-400 min-w-0">
+              <span className="truncate"><span className="font-bold text-white">ClassHash: </span>{classHash}</span>
+              <CopyButton
+                copyText={classHash}
                 className="flex-shrink-0"
               />
             </div>

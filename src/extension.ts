@@ -22,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   vscode.commands.registerCommand("ankh.itemClicked", (item: ContractItem) => {
-    if (item.type === "contract" || item.type === "deployedContract") {
+    if (item.type === "contract" || item.type === "deployedContract" || item.type === "externalContract") {
       ContractInteractionPanel.createOrShow(context.extensionUri, item);
     }
   });
@@ -40,6 +40,13 @@ export function activate(context: vscode.ExtensionContext) {
       contractProvider.refresh();
     },
   );
+
+  const refreshSingleContract = vscode.commands.registerCommand(
+    "ankh.refreshSingleContract",
+    (item: ContractItem) => {
+      ContractInteractionPanel.refreshContract(item);
+    }
+  )
 
   const openContractCommand = vscode.commands.registerCommand(
     "ankh.openContract",
@@ -80,6 +87,13 @@ export function activate(context: vscode.ExtensionContext) {
     },
   );
 
+  const addExternalContract = vscode.commands.registerCommand(
+    "ankh.addExternalContract",
+    async () => {
+      await contractProvider.addExternalContract()
+    }
+  )
+
   // Command to clear workspace root
   const clearWorkspaceRootCommand = vscode.commands.registerCommand(
     "ankh.clearWorkspaceRoot",
@@ -109,6 +123,15 @@ export function activate(context: vscode.ExtensionContext) {
     },
   );
 
+  const savePrivateKey = vscode.commands.registerCommand("ankh.savePrivateKey", async () => {
+    await ContractInteractionPanel.savePrivateKey()
+  })
+
+  const deletePrivateKey = vscode.commands.registerCommand("ankh.deletePrivateKey", async () => {
+    const pkDeleted = await ContractInteractionPanel.deletePrivateKey();
+    return pkDeleted
+  })
+
   const workspaceWatcher = vscode.workspace.onDidChangeWorkspaceFolders(() => {
     ContractInteractionPanel.closeAll();
   });
@@ -131,6 +154,10 @@ export function activate(context: vscode.ExtensionContext) {
     selectWorkspaceRootCommand,
     showWorkspaceRootCommand,
     clearWorkspaceRootCommand,
+    addExternalContract,
+    savePrivateKey,
+    deletePrivateKey,
+    refreshSingleContract
   );
 }
 

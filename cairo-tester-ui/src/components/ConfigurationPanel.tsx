@@ -1,16 +1,16 @@
 import { ChevronRight, Settings } from "lucide-react";
-import { useState, type Dispatch, type SetStateAction } from "react";
+import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { CopyButton } from "./CopyButton";
 import type { AccountInfo, ContractArtifact } from "../types";
-import type { Address } from "@starknet-react/chains";
+// import { calculateContractClassHash } from "../utils";
 // import { useConfig } from "../contexts/cairoTesterContext";
 
 type FormInputFields = {
   network: NetworkType;
   rpcUrl: string;
-  account: Address;
+  account: `0x${string}`;
   classHash?: string;
-  contractAddress?: Address;
+  contractAddress?: `0x${string}`;
 };
 
 type NetworkType = "devnet" | "sepolia" | "mainnnet";
@@ -23,10 +23,10 @@ export const ConfigurationPanel = ({
   //   form,
   inputElements,
   deploying,
-  validating,
   handleDeploy,
   handleLoadContract,
   onCollapse,
+  handleDeclare
 }: {
   contractData: ContractArtifact;
   accountInfo?: AccountInfo;
@@ -35,12 +35,16 @@ export const ConfigurationPanel = ({
   form: Record<string, any>;
   inputElements: any[];
   deploying: boolean;
-  validating: boolean;
   handleDeploy: () => void;
   handleLoadContract: () => void;
   onCollapse: () => void;
+  handleDeclare: () => Promise<string | undefined>
 }) => {
   const [activeTab, setActiveTab] = useState<"deploy" | "load">("deploy");
+
+  const classHash = useMemo(() => {
+    return contractData.classHash
+  }, [contractData])
 
   return (
     <div className="bg-[#161616] border border-gray-700 rounded-xl overflow-hidden">
@@ -69,6 +73,24 @@ export const ConfigurationPanel = ({
             </div>
           </div>
           <div className="bg-[#1E1E1E] rounded-lg p-3 space-y-2 text-xs">
+            <div className="flex items-center justify-between gap-4">
+              <div></div>
+              <button
+                className="bg-blue-600 px-6 py-2.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-opacity text-white"
+                onClick={handleDeclare}
+              >
+                {contractData.classHash === "" || !contractData.classHash ? "Declare Class" : "ClassHash"}
+              </button>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-gray-400">Calculated ClassHash:</span>
+              <div className="flex items-center gap-2 min-w-0 flex-1 justify-end">
+                <span className="font-medium truncate">
+                  {classHash}
+                </span>
+                <CopyButton copyText={classHash} />
+              </div>
+            </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Network:</span>
               <span className="font-medium">{formInputValues.network}</span>
@@ -137,9 +159,9 @@ export const ConfigurationPanel = ({
               <button
                 className="bg-blue-600 px-6 py-2.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-opacity text-white"
                 onClick={handleDeploy}
-                disabled={validating || deploying}
+                disabled={deploying}
               >
-                {validating === true ? "Validating..." : deploying ? "Deploying..." : "Deploy"}
+                {deploying ? "Deploying..." : "Deploy"}
               </button>
             </div>
           </div>

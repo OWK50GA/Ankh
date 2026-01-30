@@ -19,6 +19,11 @@ type StructProps = {
   stateMutability: "view" | "external"
 };
 
+type EnumShape = Record<string, {
+  type: any,
+  value: any
+}>;
+
 export const Struct = ({
   parentForm,
   setParentForm,
@@ -37,6 +42,90 @@ export const Struct = ({
 
   // select enum
   const [activeVariantIndex, setActiveVariantIndex] = useState(0);
+
+  // side effect once it mounts, in case it had just been changed from raw to formdata
+  useEffect(() => {
+    if (!parentForm || !abiMember) return;
+
+    const convertStruct = (struct: EnumShape, parentObject: Record<string, any>): Record<string, any> | undefined => {
+      if (!struct) return;
+
+      const converted: Record<string, any> = {};
+
+      const keys = Object.keys(struct);
+      const values: Record<string, any>[] = Object.values(struct);
+
+      keys.forEach((key, index) => {
+        const correspValue = values[index];
+        const attachment = `_${key}_${correspValue.type}`;
+  
+        const parentObjKeys = Object.keys(parentObject);
+        const correspFormKey = parentObjKeys.find((key) => key.endsWith(attachment));
+        if (!correspFormKey) return;
+  
+        converted[correspFormKey] = correspValue.value;
+      })
+      return converted;
+    }
+    
+    if (abiMember.type === "struct") {
+      console.log("Parent state object key: ", parentStateObjectKey);
+      const currentStruct = parentForm[parentStateObjectKey];
+      console.log("Current Struct: ", currentStruct);
+      
+      const converted = convertStruct(currentStruct, form);
+      if (!converted) return;
+  
+      console.log("Converted: ", converted);
+      setForm(converted);
+    } else {
+      const currentEnum = parentForm[parentStateObjectKey];
+      if (!currentEnum) return;
+      console.log("Current Enum: ", currentEnum);
+
+      const variant = currentEnum.variant;
+      const variantKeys = Object.keys(variant);
+      const variantValues: Record<string, any>[] = Object.values(variant);
+
+      const converted: Record<string, any> = {};
+
+      variantKeys.forEach((key, index) => {
+        const correspValue = variantValues[index];
+        const attachment = `_${key}_${correspValue.type}`
+
+        const formKeys = Object.keys(form);
+        const correspFormKey = formKeys.find((key) => key.endsWith(attachment));
+        if (!correspFormKey) return;
+
+        let value = correspValue.value;
+
+        
+        if (correspValue.value satisfies EnumShape) {
+          console.log("Trying to convert this: ", correspValue.value)
+          const convertedStruct = convertStruct(correspValue.value as EnumShape, correspValue);
+          if (!convertedStruct) {
+            console.error("Error converting struct");
+          }
+          console.log("COnverted struct: ", convertedStruct);
+          value = convertedStruct;
+        }
+        
+        converted[correspFormKey] = value;
+        console.log(value);
+
+        setActiveVariantIndex(index);
+        console.log("Converted: ", converted);
+      })
+      
+      setForm(converted);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (abiMember?.type === "enum") {
+      console.log("Internal form: ", form);
+    }
+  }, [form])
 
   // side effect to transform data before setState
   useEffect(() => {
@@ -74,13 +163,6 @@ export const Struct = ({
     }),
     activeVariantIndex,
   ]);
-
-  console.log(
-    "Struct received abiMember:",
-    abiMember,
-    "for key",
-    parentStateObjectKey,
-  );
 
   if (!abiMember) {
     console.log("Abi member not found");
