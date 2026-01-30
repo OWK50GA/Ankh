@@ -3,6 +3,7 @@ import { useConfig } from "../contexts/cairoTesterContext";
 import toast from "react-hot-toast";
 import {
   addError,
+  declareClass,
   deployContract,
   getCompiledSierra,
   getConstructorWithArgs,
@@ -227,6 +228,45 @@ export default function ConfigurationForm({
     }
   };
 
+  const handleDeclare = async (): Promise<string | undefined> => {
+    try {
+      const classHash = await declareClass(
+        contractData,
+        accountInfo.rpcUrl,
+        accountInfo.walletAddress,
+        accountInfo.privateKey,
+      )
+
+      if (!classHash) {
+        throw new Error("Declaration unsuccessful");
+      }
+
+      setContractFunctionsData((prev: any) => ({
+        ...prev,
+        classHash
+      }));
+      setContractData((prev: any) => ({
+        ...prev,
+        classHash
+      }));
+      setFormInputValues((prev: any) => ({
+        ...prev,
+        classHash,
+      }));
+      persistState({
+        contractName: contractData.name,
+        deploymentInfo: {
+          classHash: classHash.toString(),
+        }
+      })
+
+      notifySuccessful("Deployment successful");
+      return classHash
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   // For configuration form
   const handleLoadContract = async () => {
     console.log("Loading...");
@@ -338,6 +378,7 @@ export default function ConfigurationForm({
             handleDeploy={handleDeploy}
             handleLoadContract={handleLoadContract}
             onCollapse={() => setIsExpanded(false)}
+            handleDeclare={handleDeclare}
           />
         )}
       </div>

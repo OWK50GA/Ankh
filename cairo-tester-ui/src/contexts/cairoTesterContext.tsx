@@ -58,78 +58,22 @@ export const CairoTesterProvider: FC<{ children: ReactNode }> = ({
   const [contractFunctionsData, setContractFunctionsData] =
     useState<ContractFunctionData>();
   const [contractData, setContractData] = useState<ContractArtifact>();
-  // const [contractAddress, setContractAddress] = useState<Address>(zeroAddress)
+  const [classHash, setClassHash] = useState<string>("");
   const [accountInfo, setAccountInfo] = useState<AccountInfo>({
     privateKey: "",
     walletAddress: "",
     rpcUrl: "",
   });
 
-  // useEffect(() => {
-  //   if (window.vscode) {
-  //     window.vscode.postMessage({ type: "getPersistentState" });
-  //   }
-
-  //   const handlePersistentStateMessage = (event: MessageEvent) => {
-  //     const message = event.data;
-
-  //     if (message.type === "persistentState") {
-  //       const data = (message.data as PanelState) || (message as PanelState);
-
-  //       if (data.deploymentInfo) {
-  //         const contractAddress = data.deploymentInfo.contractAddress;
-  //         const classHash = data.deploymentInfo.classHash;
-
-  //         // if (!verifyClassHash(classHash!)) return;
-
-  //         if (contractAddress) {
-  //           setContractData((prev: any) => ({
-  //             ...prev,
-  //             contractAddress: contractAddress,
-  //           }));
-  //           setContractFunctionsData((prev: any) => ({
-  //             ...prev,
-  //             contractAddress: contractAddress,
-  //           }));
-  //           console.log("FOund persistent contract address and class hash")
-  //         }
-  //         if (classHash) {
-  //           setContractData((prev: any) => ({ ...prev, classHash: classHash }));
-  //         }
-  //       }
-  //     }
-  //   };
-
-  //   window.addEventListener("message", handlePersistentStateMessage);
-
-  //   return () =>
-  //     window.removeEventListener("message", handlePersistentStateMessage);
-  // }, []);
-
-  // useEffect(() => {
-  //   if (!contractData) return;
-
-    
-
-  //   persistState({
-  //     contractName: contractData?.name,
-  //     deploymentInfo: {
-  //       classHash: contractData?.classHash,
-  //       contractAddress: contractData?.contractAddress,
-  //     }
-  //   })
-
-  //   console.log("Persisted state")
-
-  // }, [contractData]);
-
   const value = {
     currentNetwork,
     rpcUrl,
+    classHash,
     contractFunctionsData,
     contractData,
     setCurrentNetwork,
     setRpcUrl,
+    setClassHash,
     setContractFunctionsData,
     setContractData,
     // contractAddress,

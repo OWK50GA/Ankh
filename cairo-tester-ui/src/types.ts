@@ -23,7 +23,7 @@ declare global {
 
 export type ContractArtifact = {
   abi: Abi;
-  classHash?: string;
+  classHash: string;
   contractAddress?: string;
   sierraProgram: string[];
   sierraProgramDebugInfo?: Record<string, any>;

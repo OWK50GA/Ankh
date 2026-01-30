@@ -14,12 +14,11 @@ function App() {
     setContractData, 
     accountInfo, 
     setAccountInfo,
-    setContractFunctionsData
+    setContractFunctionsData,
   } = useConfig();
   const [contractDataLoading, setContractDataLoading] = useState(true);
   const [accountInfoLoading, setAccountInfoLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
 
   useEffect(() => {
     if (window.vscode) {

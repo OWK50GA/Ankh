@@ -5,7 +5,7 @@ import {
 } from "../providers/CairoContractsProvider";
 import * as path from "path";
 import * as fs from "fs";
-import { CairoAssembly, CompiledSierra, extractContractHashes, SierraEntryPointsByType } from "starknet";
+import { CairoAssembly, CompiledSierra, extractContractHashes, RpcProvider, SierraEntryPointsByType } from "starknet";
 
 interface PanelState {
   contractName: string;
