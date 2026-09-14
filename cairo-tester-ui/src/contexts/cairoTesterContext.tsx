@@ -1,7 +1,6 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useState,
   type Dispatch,
   type FC,
@@ -13,6 +12,8 @@ import type {
   ContractArtifact,
   ContractFunctionData,
 } from "../types";
+// import { getCompiledSierra } from "../utils";
+// import { extractContractHashes } from "starknet";
 
 type NetworkType = "devnet" | "sepolia" | "mainnnet";
 
@@ -35,15 +36,6 @@ export type CairoTesterContextType = {
   setAccountInfo: Dispatch<SetStateAction<AccountInfo>>;
 };
 
-interface PanelState {
-  contractName: string;
-  deploymentInfo?: {
-    classHash?: string;
-    contractAddress?: string;
-  };
-  logs?: string[];
-}
-
 const CairoTesterContext = createContext<CairoTesterContextType | null>(null);
 
 export const useConfig = () => {
@@ -61,64 +53,27 @@ export const CairoTesterProvider: FC<{ children: ReactNode }> = ({
 }) => {
   const [currentNetwork, setCurrentNetwork] = useState<NetworkType>("devnet");
   const [rpcUrl, setRpcUrl] = useState(
-    "https://starknet-sepolia.public.blastapi.io/rpc/v0_8",
+    "https://rpc.starknet-testnet.lava.build/rpc/v0_9"
   );
   const [contractFunctionsData, setContractFunctionsData] =
     useState<ContractFunctionData>();
   const [contractData, setContractData] = useState<ContractArtifact>();
-  // const [contractAddress, setContractAddress] = useState<Address>(zeroAddress)
+  const [classHash, setClassHash] = useState<string>("");
   const [accountInfo, setAccountInfo] = useState<AccountInfo>({
     privateKey: "",
     walletAddress: "",
     rpcUrl: "",
   });
 
-  useEffect(() => {
-    if (window.vscode) {
-      window.vscode.postMessage({ type: "getPersistentState" });
-    }
-
-    const handlePersistentStateMessage = (event: MessageEvent) => {
-      const message = event.data;
-
-      if (message.type === "persistentState") {
-        const data = (message.data as PanelState) || (message as PanelState);
-
-        if (data.deploymentInfo) {
-          const contractAddress = data.deploymentInfo.contractAddress;
-          const classHash = data.deploymentInfo.classHash;
-
-          if (contractAddress) {
-            setContractData((prev: any) => ({
-              ...prev,
-              contractAddress: contractAddress,
-            }));
-            setContractFunctionsData((prev: any) => ({
-              ...prev,
-              contractAddress: contractAddress,
-            }));
-          }
-          if (classHash) {
-            setContractData((prev: any) => ({ ...prev, classHash: classHash }));
-            setContractData((prev: any) => ({ ...prev, classHash: classHash }));
-          }
-        }
-      }
-    };
-
-    window.addEventListener("message", handlePersistentStateMessage);
-
-    return () =>
-      window.removeEventListener("message", handlePersistentStateMessage);
-  }, []);
-
   const value = {
     currentNetwork,
     rpcUrl,
+    classHash,
     contractFunctionsData,
     contractData,
     setCurrentNetwork,
     setRpcUrl,
+    setClassHash,
     setContractFunctionsData,
     setContractData,
     // contractAddress,

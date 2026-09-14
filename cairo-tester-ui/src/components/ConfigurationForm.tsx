@@ -3,14 +3,16 @@ import { useConfig } from "../contexts/cairoTesterContext";
 import toast from "react-hot-toast";
 import {
   addError,
+  declareClass,
   deployContract,
+  getCompiledSierra,
   getConstructorWithArgs,
   getFunctionInputKey,
   getInitialFormState,
+  persistState,
 } from "../utils";
 import ContractInput from "./ContractInput";
 import { ConfigStatusBar } from "./ConfigStatusBar";
-import type { Address } from "@starknet-react/chains";
 import type {
   AccountInfo,
   ContractArtifact,
@@ -18,16 +20,16 @@ import type {
 } from "../types";
 import { ContractStatus } from "./ContractStatus";
 import { ConfigurationPanel } from "./ConfigurationPanel";
-import { CallData } from "starknet";
+import { CallData, extractContractHashes, RpcProvider } from "starknet";
 
 type NetworkType = "devnet" | "sepolia" | "mainnnet";
 
 type FormInputFields = {
   network: NetworkType;
   rpcUrl: string;
-  account: Address;
+  account: `0x${string}`;
   classHash?: string;
-  contractAddress?: Address;
+  contractAddress?: `0x${string}`;
 };
 
 export default function ConfigurationForm({
@@ -40,10 +42,16 @@ export default function ConfigurationForm({
   const [isExpanded, setIsExpanded] = useState(true);
   const [isDeployed, setIsDeployed] = useState(true);
   const [deploying, setDeploying] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
 
-  const { setContractData, setAccountInfo, setContractFunctionsData } =
+  const { setContractData, setAccountInfo, setContractFunctionsData, contractData: contextContractData } =
     useConfig();
+
+  useEffect(() => {
+    if (contextContractData?.contractAddress) {
+      setIsDeployed(true);
+      setIsExpanded(false);
+    }
+  }, [contextContractData])
 
   const notifySuccessful = (message: string) => {
     return toast.success(message);
@@ -78,7 +86,7 @@ export default function ConfigurationForm({
   const [formInputValues, setFormInputValues] = useState<FormInputFields>({
     network: "sepolia",
     rpcUrl: accountInfo.rpcUrl,
-    account: accountInfo.walletAddress as Address,
+    account: accountInfo.walletAddress as `0x${string}`,
   });
 
   const [form, setForm] = useState<Record<string, any>>(() =>
@@ -88,7 +96,7 @@ export default function ConfigurationForm({
   const [formErrorMessage, setFormErrorMessage] =
     useState<FormErrorMessageState>({});
 
-  const inputElements = constructor.inputs.map((input, index) => {
+  const inputElements = constructor?.inputs?.map((input, index) => {
     const key = getFunctionInputKey(constructor.name, input, index);
 
     return (
@@ -153,15 +161,13 @@ export default function ConfigurationForm({
   };
 
   const handleDeploy = async () => {
-    setIsValidating(true);
+    setDeploying(true);
     const values = Object.values(form);
     const isValid = formIsValid(values);
     if (!isValid) {
       notifyFailed("Fill form completely/correctly");
       throw new Error("Form not valid, recheck");
     }
-    setIsValidating(false);
-    setDeploying(true);
 
     try {
       console.log(form);
@@ -191,16 +197,25 @@ export default function ConfigurationForm({
       setContractFunctionsData((prev: any) => ({
         ...prev,
         contractAddress: contract.address as `0x${string}`,
+        classHash
       }));
       setContractData((prev: any) => ({
         ...prev,
         contractAddress: contract.address as `0x${string}`,
+        classHash
       }));
       setFormInputValues((prev: any) => ({
         ...prev,
         contractAddress: contract.address,
         classHash,
       }));
+      persistState({
+        contractName: contractData.name,
+        deploymentInfo: {
+          classHash: classHash.toString(),
+          contractAddress: contract.address
+        }
+      })
 
       notifySuccessful("Deployment successful");
       setIsDeployed(true);
@@ -213,29 +228,107 @@ export default function ConfigurationForm({
     }
   };
 
+  const handleDeclare = async (): Promise<string | undefined> => {
+    try {
+      const classHash = await declareClass(
+        contractData,
+        accountInfo.rpcUrl,
+        accountInfo.walletAddress,
+        accountInfo.privateKey,
+      )
+
+      if (!classHash) {
+        throw new Error("Declaration unsuccessful");
+      }
+
+      setContractFunctionsData((prev: any) => ({
+        ...prev,
+        classHash
+      }));
+      setContractData((prev: any) => ({
+        ...prev,
+        classHash
+      }));
+      setFormInputValues((prev: any) => ({
+        ...prev,
+        classHash,
+      }));
+      persistState({
+        contractName: contractData.name,
+        deploymentInfo: {
+          classHash: classHash.toString(),
+        }
+      })
+
+      notifySuccessful("Deployment successful");
+      return classHash
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   // For configuration form
-  const handleLoadContract = () => {
+  const handleLoadContract = async () => {
     console.log("Loading...");
 
     try {
-      const { contractAddress, classHash } = formInputValues;
+      const { 
+        contractAddress: formContractAddress, 
+        classHash: formClassHash
+      } = formInputValues;
 
-      if (!contractAddress) {
+      if (!formContractAddress) {
         notifyFailed("Add contractAddress to load an already-deployed version");
-        throw new Error("Add contractAddress to load contract");
+        return;
+      }
+
+      const compiledSierra = getCompiledSierra(contractData);
+
+      const { classHash: extractedClassHash } = extractContractHashes({
+        contract: compiledSierra,
+        casm: contractData.compiledCasm
+      })
+
+      if (formClassHash && formClassHash !== extractedClassHash) {
+        notifyFailed("Classhash not same as local contract");
+        return;
+      } 
+      
+      if (!formClassHash) {
+        const rpcUrl = accountInfo.rpcUrl;
+        if (rpcUrl === "") {
+          notifyFailed("Rpc url missing");
+          return;
+        }
+        const provider = new RpcProvider({ nodeUrl: rpcUrl });
+        const classHashOnChain = await provider.getClassHashAt(formContractAddress);
+
+        if (classHashOnChain !== extractedClassHash) {
+          notifyFailed("Classhash not same as local contract") ;
+          return;
+        }
       }
 
       setContractData((prev: any) => ({
         ...prev,
-        contractAddress,
-        ...(classHash && { classHash: classHash }),
+        contractAddress: formContractAddress,
+        ...(formClassHash ? { classHash: formClassHash } : { classHash: extractedClassHash }),
       }));
 
       setContractFunctionsData((prev: any) => ({
         ...prev,
-        contractAddress,
-        ...(classHash && { classHash }),
+        contractAddress: formContractAddress,
+        ...(formClassHash ? { classHash: formClassHash } : { classHash: extractedClassHash }),
       }));
+
+      persistState({
+        contractName: contractData.name,
+        deploymentInfo: {
+          classHash: extractedClassHash,
+          contractAddress: formContractAddress
+        }
+      })
+
       notifySuccessful("Contract Loaded Successfully");
       setIsDeployed(true);
       setIsExpanded(false);
@@ -245,11 +338,9 @@ export default function ConfigurationForm({
     }
   };
 
-  // const jsonAbi = JSON.stringify(contractData.abi);
-
   return (
     <div className="bg-[#161616] text-[#9BDBFF] p-4">
-      <h1 className="text-2xl font-bold mb-6">{contractData.name}</h1>
+      <h1 className="text-2xl font-bold mb-6">{contextContractData?.name || contractData.name}</h1>
 
       <div className="max-w-6xl space-y-4">
         {/* Collapsed State - Status Bar */}
@@ -265,9 +356,9 @@ export default function ConfigurationForm({
         {/* Collapsed State - Contract Loaded */}
         {!isExpanded && isDeployed && (
           <ContractStatus
-            contractName={contractData.name}
-            contractAddress={contractData.contractAddress}
-            classHash={contractData.classHash}
+            contractName={contextContractData?.name || contractData.name}
+            contractAddress={contextContractData?.contractAddress}
+            classHash={contextContractData?.classHash || contractData.classHash}
             onConfigure={() => setIsExpanded(true)}
           />
         )}
@@ -275,7 +366,7 @@ export default function ConfigurationForm({
         {/* Expanded State */}
         {isExpanded && (
           <ConfigurationPanel
-            contractData={contractData}
+            contractData={contextContractData || contractData}
             accountInfo={accountInfo}
             formInputValues={formInputValues}
             setFormInputValues={setFormInputValues}
@@ -283,10 +374,11 @@ export default function ConfigurationForm({
             // form={form}
             inputElements={inputElements}
             deploying={deploying}
-            validating={isValidating}
+            // validating={isValidating}
             handleDeploy={handleDeploy}
             handleLoadContract={handleLoadContract}
             onCollapse={() => setIsExpanded(false)}
+            handleDeclare={handleDeclare}
           />
         )}
       </div>

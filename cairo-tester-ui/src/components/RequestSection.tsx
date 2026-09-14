@@ -12,6 +12,7 @@ import {
 import { useConfig } from "../contexts/cairoTesterContext";
 import toast from "react-hot-toast";
 import { Account, CallData, Contract, RpcProvider } from "starknet";
+import RawArgsEditor from "./RawArgsEditor";
 
 export const RequestSection = ({
   selectedFunction,
@@ -58,12 +59,18 @@ export const RequestSection = ({
   const [formErrorMessage, setFormErrorMessage] =
     useState<FormErrorMessageState>({});
 
+  const [dataEntryFormat, setDataEntryFormat] = useState<"formData" | "raw">("formData");
+
   const notifyFailed = (message: string) => {
-    return toast.error(message);
+    return toast.error(message, {
+      duration: 3000
+    });
   };
 
   const notifySuccess = (message: string) => {
-    return toast.success(message);
+    return toast.success(message, {
+      duration: 3000
+    });
   };
 
   const formIsValid = (values: any[]): boolean => {
@@ -140,17 +147,8 @@ export const RequestSection = ({
 
     const provider = new RpcProvider({ nodeUrl: accountInfo.rpcUrl });
 
-    // const readyForInteraction = !!contractAddress && contractAddress !== ("" as `0x${string}`) && (contractAddress as `0x${string}`) satisfies `0x${string}`
-
     try {
       setIsLoading(true);
-      // const account = new Account(
-      //   provider,
-      //   accountInfo.walletAddress,
-      //   accountInfo.privateKey,
-      //   "1",
-      //   constants.TRANSACTION_VERSION.V3,
-      // );
       const account = new Account({
         provider,
         address: accountInfo.walletAddress,
@@ -197,7 +195,6 @@ export const RequestSection = ({
     }
 
     const provider = new RpcProvider({ nodeUrl: accountInfo.rpcUrl });
-    // const contract = new Contract(abi, contractAddress!, provider);
     const contract = new Contract({
       abi,
       address: contractAddress!,
@@ -285,29 +282,75 @@ export const RequestSection = ({
 
       <div className="space-y-3">
         <h4 className="text-sm font-medium text-gray-400">Parameters</h4>
+
+        {/* Tabs */}
+        <div>
+          <button
+            onClick={() => setDataEntryFormat("formData")}
+            className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              dataEntryFormat === "formData"
+                ? "text-[#9BDBFF]"
+                : "text-gray-400 hover:text-gray-300"
+            }`}
+          >
+            form-data
+            {dataEntryFormat === "formData" && (
+              <div className={`absolute bottom-0 left-0 right-0 h-[1px] 
+                ${selectedFunction.state_mutability === "view" ? "bg-blue-400" : "bg-orange-400"} 
+              `}></div>
+            )}
+          </button>
+
+          <button
+            onClick={() => setDataEntryFormat("raw")}
+            className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              dataEntryFormat === "raw"
+                ? "text-[#9BDBFF]"
+                : "text-gray-400 hover:text-gray-300"
+            }`}
+          >
+            raw
+            {dataEntryFormat === "raw" && (
+              <div className={`absolute bottom-0 left-0 right-0 h-[1px] 
+                ${selectedFunction.state_mutability === "view" ? "bg-blue-400" : "bg-orange-400"} 
+              `}></div>
+            )}
+          </button>
+        </div>
+
         {zeroInputs ? (
           <div className="bg-[#1E1E1E] rounded-lg p-4 text-center text-gray-500 text-sm">
             No arguments required
           </div>
         ) : (
-          <div className="space-y-3">
-            {selectedFunction.inputs.map((input, index) => (
-              <ContractInput
-                key={getFunctionInputKey(selectedFunction.name, input, index)}
-                abi={abi}
-                form={form}
-                setForm={setForm}
-                stateObjectKey={getFunctionInputKey(
-                  selectedFunction.name,
-                  input,
-                  index,
-                )}
-                paramType={input}
-                setFormErrorMessage={setFormErrorMessage}
-                stateMutability={selectedFunction.state_mutability}
-              />
-            ))}
-          </div>
+          dataEntryFormat === "formData" ? (
+            <div className="space-y-3">
+              {selectedFunction.inputs.map((input, index) => (
+                <ContractInput
+                  key={getFunctionInputKey(selectedFunction.name, input, index)}
+                  abi={abi}
+                  form={form}
+                  setForm={setForm}
+                  stateObjectKey={getFunctionInputKey(
+                    selectedFunction.name,
+                    input,
+                    index,
+                  )}
+                  paramType={input}
+                  setFormErrorMessage={setFormErrorMessage}
+                  stateMutability={selectedFunction.state_mutability}
+                />
+              ))}
+            </div>
+          ) : (
+            <RawArgsEditor 
+              selectedFunction={selectedFunction}
+              form={form}
+              setForm={setForm}
+              mode="named"
+            />
+          )
+          
         )}
       </div>
 
